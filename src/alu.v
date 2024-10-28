@@ -7,7 +7,7 @@ module ALU(
 
   input wire[31:0] op1,
   input wire[31:0] op2,
-  input wire[3:0] alu_op,
+  input wire[4:0] alu_op,
 
   output wire[31:0] result,
   output wire zero,         // 1 if result is zero
@@ -16,11 +16,11 @@ module ALU(
 );
 
 always @(*) begin
-    case(alu_op)
+    case (alu_op[3:0])
     4'b0000: // auipc
     begin
-      result = (op1 << 12) + op2;
-      overflow = (op1[31 - 12] == op2[31]) && (~op1[31 - 12] == result[31]);
+      result = op1 + op2;
+      overflow = (op1[31] == op2[31]) && (~op1[31] == result[31]);
       zero = (result == 0);
       c_out = 0;
     end
@@ -114,7 +114,7 @@ always @(*) begin
 
     4'b1011: // lui
     begin
-      result = (op1 << 12);
+      result = op1;
       overflow = 0;
       zero = (op1 == 0);
       c_out = 0;
