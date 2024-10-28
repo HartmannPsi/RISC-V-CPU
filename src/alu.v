@@ -1,19 +1,6 @@
-module ALU
-#(
-  parameter AUIPC = 4'b0000,
-  parameter ADD = 4'b0001,
-  parameter SUB = 4'b0010,
-  parameter AND = 4'b0011,
-  parameter OR = 4'b0100,
-  parameter XOR = 4'b0101,
-  parameter SLL = 4'b0110,
-  parameter SRL = 4'b0111,
-  parameter SRA = 4'b1000,
-  parameter SLT = 4'b1001,
-  parameter SLTU = 4'b1010,
-  parameter LUI = 4'b1011
-)
-(
+`inlcude "macros.v"
+
+module ALU(
   // input wire clk_in,     // system clock signal
   // input wire rst_in,			// reset signal
 	// input wire rdy_in,			// ready signal, pause cpu when low
