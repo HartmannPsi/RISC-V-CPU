@@ -17,7 +17,7 @@ module ALU(
 
 always @(*) begin
     case (alu_op[3:0])
-    4'b0000: // auipc
+    4'b1100: // auipc
     begin
       result = op1 + op2;
       overflow = (op1[31] == op2[31]) && (~op1[31] == result[31]);
@@ -120,7 +120,7 @@ always @(*) begin
       c_out = 0;
     end
 
-    4'b1100:
+    4'b0000:
     4'b1101:
     4'b1110:
     4'b1111:

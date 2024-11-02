@@ -1,4 +1,4 @@
-`define AUIPC 5'b00000
+`define AUIPC 5'b01100
 `define ADD   5'b00001
 `define SUB   5'b00010
 `define AND   5'b00011
@@ -27,7 +27,7 @@
 `define BNE   5'b11101
 `define JAL   5'b11110
 `define JALR  5'b11111
-`define NONE  5'b01111
+`define NONE  5'b00000
 
 `define BIN_OP   7'b011'0011
 `define IMM_OP   7'b001'0011
@@ -38,3 +38,18 @@
 `define JALR_OP  7'b110'0111
 `define AUIPC_OP 7'b001'0111
 `define LUI_OP   7'b011'0111
+
+`define None   4'b0000
+`define Add1   4'b0001
+`define Add2   4'b0010
+`define Add3   4'b0011
+`define Load1  4'b0100
+`define Load2  4'b0101
+`define Load3  4'b0110
+`define Load4  4'b0111
+`define Load5  4'b1000
+`define Store1 4'b1001
+`define Store2 4'b1010
+`define Store3 4'b1011
+`define Store4 4'b1100
+`define Store5 4'b1101
