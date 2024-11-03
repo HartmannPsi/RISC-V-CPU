@@ -8,7 +8,8 @@ module InstDecoder(
   output wire [4:0] rd,
   output wire [4:0] rs1,
   output wire [4:0] rs2,
-  output wire [31:0] imm
+  output wire [31:0] imm,
+  output wire jalr
 );
 
 assign wire [6:0] opcode = inst[6:0];
@@ -167,6 +168,7 @@ always @(*) begin
     use_imm = 1;
   end
   endcase
+  jalr = (op == `JALR);
 end
 
 endmodule

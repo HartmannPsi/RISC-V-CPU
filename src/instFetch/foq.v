@@ -21,7 +21,7 @@ module FpOpQueue(
   output wire branch_out,
   output wire ls_out,
   output wire use_imm_out,
-  output wire block_out
+  output wire block_out,
   output wire full_out
 );
 
