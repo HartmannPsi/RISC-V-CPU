@@ -21,6 +21,9 @@ module InstProcessor(
   // jalr done from cdb
   input wire jalr_done,
 
+  // pause signal from foq
+  input wire foq_full,
+
   // decoded inst from decoder
   output wire [4:0] op,
   output wire branch,
@@ -38,7 +41,7 @@ reg [31:0] pc;
 reg cease;
 
 assign fetch_addr = pc;
-assign decode_valid = inst_available;
+assign decode_valid = cease ? 1'b0 : inst_available;
 
 InstDecoder decoder(
   .inst(inst),
@@ -68,6 +71,9 @@ always @(posedge clk_in) begin
         cease <= 1'b1;
       end
       else if (cease && !jalr_done) begin // pause fetching util jalr is done
+        // pause
+      end
+      else if (foq_full) begin // pause fetching util foq is not full
         // pause
       end
       else begin // ordinary fetching
