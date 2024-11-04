@@ -18,7 +18,7 @@ wire [6:0] funct7 = inst[31:25];
 
 always @(*) begin
   ls = (opcode == `LD_OP) || (opcode == `ST_OP);
-  branch = (opcode == `BR_OP) || (opcode == `JAL_OP) || (opcode == `JALR_OP);
+  branch = (opcode == `BR_OP) || (opcode == `JAL_OP); // || (opcode == `JALR_OP);
   rd = inst[11:7];
   rs1 = inst[19:15];
   rs2 = inst[24:20];

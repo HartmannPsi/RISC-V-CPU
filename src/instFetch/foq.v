@@ -41,7 +41,10 @@ module FpOpQueue(
   output wire inst_out_valid,
   
   // whether queue is full
-  output wire foq_full
+  output wire foq_full,
+
+  // clear the queue
+  input wire predict_fail
 );
 
 reg [87:0] op_queue[`FOQ_SIZE - 1:0];
@@ -59,7 +62,7 @@ wire inst_total_in = {op_in, rd_in, rs1_in,
           use_imm_in, jalr_in, addr_in};
 
 always @(posedge clk_in) begin
-  if (rst_in) begin
+  if (rst_in || predict_fail) begin
     for (i = 0; i < `FOQ_SIZE; i = i + 1) begin
       op_queue[i] <= 88'b0;
     end
