@@ -1,5 +1,4 @@
-`define ICACHE_ADDR_W 5
-`define ICACHE_SIZE (1 << `ICACHE_ADDR_W)
+`inlcude "../macros.v"
 
 module InstCache(
   input wire clk_in,

@@ -1,5 +1,4 @@
-`define FOQ_SIZE_W 4
-`define FOQ_SIZE (1 << `FOQ_SIZE_W)
+`inlcude "../macros.v"
 
 module FpOpQueue(
   input wire clk_in,

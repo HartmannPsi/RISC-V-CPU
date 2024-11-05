@@ -1,4 +1,4 @@
-`inlcude "macros.v"
+`inlcude "../macros.v"
 
 module ALU(
   // input wire clk_in,     // system clock signal

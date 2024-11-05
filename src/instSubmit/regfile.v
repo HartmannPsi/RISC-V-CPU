@@ -1,3 +1,5 @@
+`inlcude "../macros.v"
+
 module RegFile(
   input wire clk_in,
   input wire rst_in,

@@ -53,3 +53,12 @@
 `define Store3 4'b1011
 `define Store4 4'b1100
 `define Store5 4'b1101
+
+`define BP_SIZE_W 8
+`define BP_SIZE (1 << `BP_SIZE_W)
+
+`define FOQ_SIZE_W 4
+`define FOQ_SIZE (1 << `FOQ_SIZE_W)
+
+`define ICACHE_ADDR_W 5
+`define ICACHE_SIZE (1 << `ICACHE_ADDR_W)

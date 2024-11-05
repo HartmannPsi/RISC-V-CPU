@@ -1,5 +1,4 @@
-`define BP_SIZE_W 8
-`define BP_SIZE (1 << `BP_SIZE_W)
+`inlcude "../macros.v"
 
 module BranchPredictor(
   input wire clk_in,

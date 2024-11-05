@@ -1,3 +1,5 @@
+`inlcude "macros.v"
+
 module MemController(
   input wire clk_in,
   input wire rst_in,
