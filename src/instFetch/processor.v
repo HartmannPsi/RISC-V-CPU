@@ -15,6 +15,11 @@ module InstProcessor(
   // branch target from bp
   input wire [31:0] branch_addr,
 
+  // whether former prediction is wrong from bp
+  input wire predict_fail,
+  // fail addr to reset from bp
+  input wire [31:0] fail_addr,
+
   // whther the inst is valid
   output wire decode_valid,
 
@@ -26,7 +31,7 @@ module InstProcessor(
 
   // decoded inst from decoder
   output wire [4:0] op,
-  output wire branch,
+  output wire branch_out,
   output wire ls,
   output wire use_imm,
   output wire [4:0] rd,
@@ -46,7 +51,7 @@ assign decode_valid = cease ? 1'b0 : inst_available;
 InstDecoder decoder(
   .inst(inst),
   .op(op),
-  .branch(branch),
+  .branch(branch_out),
   .ls(ls),
   .use_imm(use_imm),
   .rd(rd),
@@ -77,10 +82,16 @@ always @(posedge clk_in) begin
         // pause
       end
       else begin // ordinary fetching
-        if (branch) begin
+        if (predict_fail) begin // reset from predict fail
+          pc <= fail_addr;
+        end
+        else if (branch) begin // go to predicted branch addr
           pc <= branch_addr;
         end
-        else begin
+        else if (op == `JAL) begin // go to unconditional branch addr
+          pc <= pc + imm;
+        end
+        else begin // normal pc increment
           pc <= pc + 4;
         end
       end

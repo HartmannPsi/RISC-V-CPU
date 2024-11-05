@@ -16,8 +16,8 @@ module ALU(
 );
 
 always @(*) begin
-    case (alu_op[3:0])
-    4'b1100: // auipc
+    case (alu_op)
+    `AUIPC: // auipc
     begin
       result = op1 + op2;
       overflow = (op1[31] == op2[31]) && (~op1[31] == result[31]);
@@ -25,7 +25,7 @@ always @(*) begin
       c_out = 0;
     end
 
-    4'b0001: // add
+    `ADD: // add
     begin
       result = op1 + op2;
       overflow = (op1[31] == op2[31]) && (~op1[31] == result[31]);
@@ -33,7 +33,7 @@ always @(*) begin
       c_out = 0;
     end
 
-    4'b0010: // sub
+    `SUB: // sub
     begin
       result = op1 - op2;
       overflow = (op1[31] == 0 && op2[31] == 1 && result[31] == 1) || (op1[31] == 1 && op2[31] == 0 && result[31] == 0);
@@ -41,7 +41,7 @@ always @(*) begin
       c_out = 0;
     end
 
-    4'b0011: // and
+    `AND: // and
     begin
       result = op1 & op2;
       overflow = 0;
@@ -49,7 +49,7 @@ always @(*) begin
       c_out = 0;
     end
 
-    4'b0100: // or
+    `OR: // or
     begin
       result = op1 | op2;
       overflow = 0;
@@ -57,7 +57,7 @@ always @(*) begin
       c_out = 0;
     end
 
-    4'b0101: // xor
+    `XOR: // xor
     begin
       result = op1 ^ op2;
       overflow = 0;
@@ -65,14 +65,14 @@ always @(*) begin
       c_out = 0;
     end
 
-    4'b0110: // sll
+    `SLL: // sll
     begin
       {c_out, result} = op1 << op2;
       overflow = 0;
       zero = (result == 0);
     end
 
-    4'b0111: // srl
+    `SRL: // srl
     begin
       result = op1 >> op2;
       c_out = op1[op2 - 1];
@@ -80,7 +80,7 @@ always @(*) begin
       zero = (result == 0);
     end
 
-    4'b1000: // sra
+    `SRA: // sra
     begin
       result = $signed(op1) >>> op2;
       c_out = op1[op2 - 1];
@@ -88,7 +88,7 @@ always @(*) begin
       zero = (result == 0);
     end
 
-    4'b1001: // slt
+    `SLT: // slt
     begin
       if (op1[31] == 0 && op2[31] == 1) begin
         result = 0;
@@ -104,7 +104,7 @@ always @(*) begin
       c_out = result[0];
     end
 
-    4'b1010: // sltu
+    `SLTU: // sltu
     begin
       result = (op1 < op2);
       overflow = 0;
@@ -112,7 +112,7 @@ always @(*) begin
       c_out = result[0];
     end
 
-    4'b1011: // lui
+    `LUI: // lui
     begin
       result = op1;
       overflow = 0;
@@ -120,10 +120,72 @@ always @(*) begin
       c_out = 0;
     end
 
-    4'b0000:
-    4'b1101:
-    4'b1110:
-    4'b1111:
+    
+    `BGE: // bge
+    begin
+      if (op1[31] == 0 && op2[31] == 1) begin
+        result[0] = 1'b1;
+      end
+      else if (op1[31] == 1 && op2[31] == 0) begin
+        result[0] = 1'b0;
+      end
+      else begin
+        result[0] = (op1 >= op2);
+      end
+      result[31:1] = 31'b0;
+      overflow = 0;
+      zero = ~result[0];
+      c_out = 0;
+    end
+
+    `BGEU:
+    begin
+      result = {31'b0, (op1 >= op2)};
+      overflow = 0;
+      zero = ~result[0];
+      c_out = 0;
+    end
+
+    `BLT:
+    begin
+      if (op1[31] == 0 && op2[31] == 1) begin
+        result[0] = 1'b0;
+      end
+      else if (op1[31] == 1 && op2[31] == 0) begin
+        result[0] = 1'b1;
+      end
+      else begin
+        result[0] = (op1 < op2);
+      end
+      result[31:1] = 31'b0;
+      overflow = 0;
+      zero = ~result[0];
+      c_out = 0;
+    end
+
+    `BLTU:
+    begin
+      result = {31'b0, (op1 < op2)};
+      overflow = 0;
+      zero = ~result[0];
+      c_out = 0;
+    end
+
+    `BNE:
+    begin
+      result = {31'b0, (op1 != op2)};
+      overflow = 0;
+      zero = ~result[0];
+      c_out = 0;
+    end
+
+    `BEQ:
+    begin
+      result = {31'b0, (op1 == op2)};
+      overflow = 0;
+      zero = ~result[0];
+      c_out = 0;
+    end
     endcase
 end
 
