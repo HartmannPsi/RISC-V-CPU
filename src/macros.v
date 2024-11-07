@@ -62,3 +62,6 @@
 
 `define ICACHE_ADDR_W 5
 `define ICACHE_SIZE (1 << `ICACHE_ADDR_W)
+
+`define ROB_SIZE_W 4
+`define ROB_SIZE (1 << `ROB_SIZE_W)
