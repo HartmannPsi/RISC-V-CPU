@@ -26,7 +26,7 @@ module ReorderBuffer(
 );
 
 reg [68:0] rob_queue[`ROB_SIZE - 1:0]; // {tag, val, addr, solved}
-reg [`ROB_SIZE_W - 1:0] front, rear;
+reg [`ROB_SIZE_W - 1:0] front, rear, i;
 
 assign cdb_active = rob_queue[front][0];
 assign cdb_addr = rob_queue[front][32:1];
@@ -42,6 +42,7 @@ always @(posedge clk_in) begin
     end
     front <= 0;
     rear <= 0;
+    i <= 0;
   end
   else if (!rdy_in) begin
     // pause

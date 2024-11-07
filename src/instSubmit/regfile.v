@@ -27,6 +27,7 @@ module RegFile(
 
 reg [31:0] reg_file[31:0];
 reg [3:0] depend_file[31:0];
+reg [4:0] i;
 
 assign reg_file[0] = 32'b0;
 assign depend_file[0] = 4'b0;
@@ -43,6 +44,7 @@ always @(posedge clk_in) begin
       reg_file[i] <= 32'b0;
       depend_file[i] <= 4'b0;
     end
+    i <= 0;
   end
   else if (!rdy_in) begin
     // pause

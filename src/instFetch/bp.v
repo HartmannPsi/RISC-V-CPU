@@ -32,7 +32,7 @@ module BranchPredictor(
 
 reg [64:0] bp_queue [0:`BP_SIZE-1]; // {src_addr, fail_addr, br}
 reg [32:0] bp_fsm[0:`BP_SIZE-1]; // [32]: used [31:2] :src_addr, [1:0]: 00: SNT, 01: WNT, 10: WT, 11: ST
-reg [`BP_SIZE_W - 1:0] front, rear;
+reg [`BP_SIZE_W - 1:0] front, rear, i;
 
 function [`BP_SIZE_W - 1:0] distribute // get the idx of fsm
   input [31:0] src_addr;
@@ -72,6 +72,7 @@ always @(posedge clk_in) begin
         bp_queue[i] = 65'b0;
         bp_fsm[i] = 33'b0;
       end
+      i <= 0;
     end
     else if (!rdy_in) begin
       // pause

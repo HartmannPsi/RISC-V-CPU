@@ -47,7 +47,7 @@ module FpOpQueue(
 );
 
 reg [87:0] op_queue[`FOQ_SIZE - 1:0];
-reg [`FOQ_SIZE_W - 1:0] front, rear;
+reg [`FOQ_SIZE_W - 1:0] front, rear, i;
 
 assign inst_out_valid = !(front == rear); // nonempty
 assign foq_full = (front == rear + 1) || (front == 0 && rear == `FOQ_SIZE - 1); // full
@@ -67,6 +67,7 @@ always @(posedge clk_in) begin
     end
     front <= 0;
     rear <= 0;
+    i <= 0;
   end
   else if (!rdy_in) begin
     // pause

@@ -28,6 +28,7 @@ wire idx = addr_in[1 + `ICACHE_ADDR_W:2];
 reg [31:0] cache[`ICACHE_SIZE - 1:0];
 reg [31 - 2 - `ICACHE_ADDR_W:0] tags[`ICACHE_SIZE - 1:0];
 reg busy[`ICACHE_SIZE - 1:0];
+reg [`ICACHE_SIZE_W - 1:0] i;
 
 assign cache_hit = busy[idx] && (tags[idx] == tag);
 assign data_out = cache_hit ? cache[idx] : 32'b0;
@@ -40,6 +41,7 @@ always @(posedge clk_in) begin
       tags[i] <= 0;
       busy[i] <= 1'b0;
     end
+    i <= 0;
   end
   else if (!rdy_in) begin
     // pause
