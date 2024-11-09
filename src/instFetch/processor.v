@@ -17,6 +17,10 @@ module InstProcessor(
   // branch target from bp
   input wire [31:0] branch_addr,
 
+  // jalr done from alu
+  input wire jalr_compute,
+  input wire [31:0] jalr_addr,
+
   // whether former prediction is wrong from bp
   input wire predict_fail,
   // fail addr to reset from bp
@@ -26,7 +30,7 @@ module InstProcessor(
   output wire decode_valid,
 
   // jalr done from cdb
-  input wire jalr_done,
+  //input wire jalr_done,
 
   // pause signal from foq
   input wire foq_full,
@@ -98,8 +102,9 @@ always @(posedge clk_in) begin
         end
       end
 
-      if (jalr_done) begin // reset cease
+      if (jalr_compute) begin // reset cease
         cease <= 1'b0;
+        pc <= jalr_addr;
       end
     end
 

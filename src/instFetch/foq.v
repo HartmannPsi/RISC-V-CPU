@@ -38,6 +38,9 @@ module FpOpQueue(
 
   // whether the inst launched is valid
   output wire inst_out_valid,
+
+  // whether the launching is successful
+  input wire inst_out_success,
   
   // whether queue is full
   output wire foq_full,
@@ -74,7 +77,7 @@ always @(posedge clk_in) begin
   end
   else begin
 
-    if (inst_out_valid) begin // pop
+    if (inst_out_valid && inst_out_success) begin // pop
       op_queue[front] <= 88'b0;
       if (front == `FOQ_SIZE - 1) begin
         front <= 0;

@@ -13,7 +13,9 @@ module ALU(
   output wire[31:0] result,
   output wire zero,         // 1 if result is zero
   output wire c_out,        // carry out
-  output wire overflow      // 1 if overflow occurs
+  output wire overflow,     // 1 if overflow occurs
+  output wire jalr_done,
+  output wire [31:0] jalr_addr
 );
 
 always @(*) begin
@@ -115,9 +117,9 @@ always @(*) begin
 
     `LUI: // lui
     begin
-      result = op1;
+      result = op2;
       overflow = 0;
-      zero = (op1 == 0);
+      zero = (op2 == 0);
       c_out = 0;
     end
 
@@ -187,7 +189,30 @@ always @(*) begin
       zero = ~result[0];
       c_out = 0;
     end
+
+    `JAL:
+    begin
+      result = addr + 4;
+      overflow = 0;
+      zero = 0;
+      c_out = 0;
+    end
+
+    `JALR:
+    begin
+      result = addr + 4;
+      overflow = 0;
+      zero = 0;
+      c_out = 0;
+      jalr_done = 1'b1;
+      jalr_addr = op1 + op2;
+    end
     endcase
+
+    if (alu_op != `JALR) begin
+      jalr_done = 1'b0;
+      jalr_addr = 32'b0;
+    end
 end
 
 

@@ -16,6 +16,7 @@ module ReservationStation(
   input wire [31:0] imm,
   input wire jalr,
   input wire [31:0] addr,
+  input wire inst_valid,
 
   // data to update from cdb
   input wire [3:0] cdb_tag,
@@ -35,6 +36,10 @@ module ReservationStation(
   output wire [31:0] submit_val,
   output wire [3:0] submit_tag,
   output wire submit_valid,
+
+  // jalr addr to processor
+  output wire jalr_done,
+  output wire [31:0] jalr_addr,
 
   // data from regfile
   input wire [31:0] vj,
@@ -89,12 +94,14 @@ function [3:0] getTag;
   end
 endfunction
 
-wire inst_receive = op != `NONE && op != `LB && op != `LBU && op != `LH && op != `LHU && op != `LW && op != `SB && op != `SH && op != `SW; // non-ls insts
+wire inst_receive = inst_valid && op != `NONE && op != `LB && op != `LBU &&
+            op != `LH && op != `LHU && op != `LW && op != `SB && op != `SH && op != `SW; // non-ls insts
+
 wire buffer_full = rs_buffer[2][0] && rs_buffer[1][0] && rs_buffer[0][0];
 assign launch_fail = inst_receive && buffer_full;
 
 wire [2:0] free_idx = buffer_full ? 3'b111 : (inst_receive ? getFreeBuf() : 3'b111);
-wire [3:0] actual_qj = op == `JAL ? `None : qj;
+wire [3:0] actual_qj = (op == `JAL || op == `AUIPC || op == `LUI) ? `None : qj;
 wire [31:0] actual_vk = use_imm ? imm : vk;
 wire [3:0] actual_qk = use_imm ? `None : qk;
 
@@ -109,6 +116,7 @@ wire [31:0] compute_addr = submit_valid ? rs_buffer[ready_idx][109:78] : 32'b0;
 wire [31:0] op1 = submit_valid ? rs_buffer[ready_idx][77:46] : 32'b0;
 wire [31:0] op2 = submit_valid ? rs_buffer[ready_idx][45:14] : 32'b0;
 wire [4:0] alu_op = submit_valid ? rs_buffer[ready_idx][5:1] : 5'b0;
+
 ALU alu(
   .op1(op1),
   .op2(op2),
@@ -118,6 +126,8 @@ ALU alu(
   .zero(),
   .c_out(),
   .overflow()
+  .jalr_done(jalr_done),
+  .jalr_addr(jalr_addr)
 );
 
 
