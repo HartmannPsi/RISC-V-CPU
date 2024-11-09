@@ -7,6 +7,7 @@ module ALU(
 
   input wire[31:0] op1,
   input wire[31:0] op2,
+  input wire[31:0] addr,
   input wire[4:0] alu_op,
 
   output wire[31:0] result,
@@ -19,8 +20,8 @@ always @(*) begin
     case (alu_op)
     `AUIPC: // auipc
     begin
-      result = op1 + op2;
-      overflow = (op1[31] == op2[31]) && (~op1[31] == result[31]);
+      result = addr + op2;
+      overflow = (addr[31] == op2[31]) && (~addr[31] == result[31]);
       zero = (result == 0);
       c_out = 0;
     end
