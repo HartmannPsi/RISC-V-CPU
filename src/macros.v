@@ -39,20 +39,20 @@
 `define AUIPC_OP 7'b001'0111
 `define LUI_OP   7'b011'0111
 
-`define None   4'b0000
-`define Add1   4'b0001
-`define Add2   4'b0010
-`define Add3   4'b0011
-`define Load1  4'b0100
-`define Load2  4'b0101
-`define Load3  4'b0110
-`define Load4  4'b0111
-`define Load5  4'b1000
-`define Store1 4'b1001
-`define Store2 4'b1010
-`define Store3 4'b1011
-`define Store4 4'b1100
-`define Store5 4'b1101
+`define None 4'b0000
+`define Add1 4'b0001
+`define Add2 4'b0010
+`define Add3 4'b0011
+`define LS1  4'b0100
+`define LS2  4'b0101
+`define LS3  4'b0110
+`define LS4  4'b0111
+`define LS5  4'b1000
+`define LS6  4'b1001
+`define LS7  4'b1010
+`define LS8  4'b1011
+`define LS9  4'b1100
+`define LS10 4'b1101
 
 `define BP_SIZE_W 8
 `define BP_SIZE (1 << `BP_SIZE_W)
