@@ -7,7 +7,7 @@ module InstCache(
 
   // addr get from decoder
   input wire [31:0] addr_in,
-    // inst to decoder
+  // inst to decoder
   output wire [31:0] data_out,
 
   // data get from ram

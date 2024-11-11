@@ -65,3 +65,6 @@
 
 `define ROB_SIZE_W 4
 `define ROB_SIZE (1 << `ROB_SIZE_W)
+
+`define DCACHE_ADDR_W 7
+`define DCACHE_SIZE (1 << `DCACHE_ADDR_W)
