@@ -5,7 +5,7 @@ module ReservationStation(
   input wire rst_in,
   input wire rdy_in,
 
-  // inst from processor
+  // inst from foq
   input wire [4:0] op,
   input wire branch_in,
   input wire ls,
@@ -31,6 +31,8 @@ module ReservationStation(
   // idx of register needed
   output wire [4:0] rs1_idx,
   output wire [4:0] rs2_idx,
+  output wire [4:0] rd_idx,
+  output wire inst_valid_out,
 
   // inst to rob
   output wire [31:0] submit_val,
@@ -108,6 +110,8 @@ wire [3:0] actual_qk = use_imm ? `None : qk;
 assign choose_tag = inst_receive ? getTag(free_idx) : `None;
 assign rs1_idx = rs1;
 assign rs2_idx = rs2;
+assign rd_idx = branch_in ? 5'b0 : rd;
+assign inst_valid_out = inst_receive;
 
 wire [2:0] ready_idx = getReadyBuf();
 assign submit_valid = ready_idx != 3'b111;

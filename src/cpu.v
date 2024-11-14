@@ -194,7 +194,7 @@ FpOpQueue foq(
 
   .inst_out_valid(inst_valid_foq),
 
-  .inst_out_success(1'b1), // TODO
+  .inst_out_success(!launch_fail_rs), // TODO
 
   .foq_full(foq_full_foq),
 
@@ -219,6 +219,84 @@ BranchPredictor bp(
 
   .need_branch(branch_bp),
   .branch_addr(branch_addr_bp)
+);
+
+wire launch_fail_rs;
+wire [3:0] choose_tag_rs;
+wire [4:0] rs1_idx_rs;
+wire [4:0] rs2_idx_rs;
+wire [4:0] rd_idx_rs;
+wire inst_valid_rs;
+wire [31:0] submit_val_rs;
+wire [3:0] submit_tag_rs;
+wire submit_valid_rs;
+wire [31:0] vj_regfile;
+wire [31:0] vk_regfile;
+wire [3:0] qj_regfile;
+wire [3:0] qk_regfile;
+
+ReservationStation rs(
+  .clk_in(clk_in),
+  .rst_in(rst_in),
+  .rdy_in(rdy_in),
+
+  .op(op_foq),
+  .branch_in(branch_foq),
+  .ls(ls_foq),
+  .use_imm(use_imm_foq),
+  .rd(rd_foq),
+  .rs1(rs1_foq),
+  .rs2(rs2_foq),
+  .imm(imm_foq),
+  .jalr(jalr_foq),
+  .addr(addr_foq),
+  .inst_valid(inst_valid_foq),
+
+  .cdb_tag(cdb_tag),
+  .cdb_val(cdb_val),
+  .cdb_addr(cdb_addr),
+  .cdb_active(cdb_active),
+
+  .launch_fail(launch_fail_rs),
+  .choose_tag(choose_tag_rs),
+  .rs1_idx(rs1_idx_rs),
+  .rs2_idx(rs2_idx_rs),
+  .rd_idx(rd_idx_rs),
+  .inst_valid_out(inst_valid_rs),
+
+  .submit_val(submit_val_rs),
+  .submit_tag(submit_tag_rs),
+  .submit_valid(submit_valid_rs),
+
+  .jalr_done(jalr_compute_alu),
+  .jalr_addr(jalr_addr_alu),
+
+  .vj(vj_regfile),
+  .vk(vk_regfile),
+  .qj(qj_regfile),
+  .qk(qk_regfile)
+);
+
+RegFile reg_file(
+  .clk_in(clk_in),
+  .rst_in(rst_in),
+  .rdy_in(rdy_in),
+
+  .rd(rd_idx_rs),
+  .rs1(rs1_idx_rs),
+  .rs2(rs2_idx_rs),
+  .rd_tag(choose_tag_rs),
+  .inst_valid(inst_valid_rs),
+
+  .cdb_tag(cdb_tag),
+  .cdb_val(cdb_val),
+  .cdb_addr(cdb_addr),
+  .cdb_active(cdb_active),
+
+  .vj(vj_regfile),
+  .vk(vk_regfile),
+  .qj(qj_regfile),
+  .qk(qk_regfile)
 );
 
 always @(posedge clk_in)
