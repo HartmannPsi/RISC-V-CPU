@@ -1,3 +1,4 @@
+// deprecated
 `inlcude "../macros.v"
 
 module InstCache(

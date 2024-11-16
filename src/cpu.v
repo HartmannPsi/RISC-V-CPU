@@ -39,6 +39,12 @@ wire [31:0] mem_addr_ram_ctrl;
 wire [7:0] din_mem_ctrl;
 wire [7:0] dout_mem_ctrl;
 
+wire st_val_lsb;
+wire [31:0] ls_addr_lsb;
+wire r_nw_lsb;
+wire [2:0] type_lsb;
+wire activate_mem_lsb;
+
 ram memory(
   .clk_in(clk_in),
   .en_in(rdy_in),
@@ -49,12 +55,12 @@ ram memory(
 );
 
 wire [31:0] addr_ctrl_icache;
-wire available_ctrl_icache;
+wire available_ctrl;
 wire [31:0] data_in_ctrl_icache = 32'b0;
 wire r_nw_ctrl_icache = 1'b1;
 wire [2:0] type_ctrl_icache = 3'b000;
 // fixed in icache: read only, LW mode
-wire [31:0] data_out_ctrl_icache;
+wire [31:0] data_out_ctrl;
 wire icache_hit;
 
 MemController mem_ctrl(
@@ -67,13 +73,13 @@ MemController mem_ctrl(
   .mem_addr(mem_addr_ram_ctrl),
   .r_nw_out(r_nw_ram_ctrl),
 
-  .addr_in(addr_ctrl_icache),
-  .data_in(data_in_ctrl_icache),
-  .r_nw_in(r_nw_ctrl_icache),
-  .type_in(type_ctrl_icache),
-  .activate_in(~icache_hit),
-  .data_out(data_out_ctrl_icache),
-  .data_available(available_ctrl_icache),
+  .addr_in(addr_ctrl_icache | ls_addr_lsb),
+  .data_in(data_in_ctrl_icache | st_val_lsb),
+  .r_nw_in(r_nw_ctrl_icache | r_nw_lsb),
+  .type_in(type_ctrl_icache | type_lsb),
+  .activate_in(~icache_hit | activate_mem_lsb),
+  .data_out(data_out_ctrl),
+  .data_available(available_ctrl),
 
   .io_buffer_full(io_buffer_full)
 );
@@ -159,7 +165,8 @@ wire use_imm_foq;
 wire jalr_foq;
 wire addr_foq;
 wire inst_valid_foq;
-
+wire launch_fail_lsb;
+wire launch_fail_rs;
 
 FpOpQueue foq(
   .clk_in(clk_in),
@@ -194,7 +201,7 @@ FpOpQueue foq(
 
   .inst_out_valid(inst_valid_foq),
 
-  .inst_out_success(!launch_fail_rs), // TODO
+  .inst_out_success(!launch_fail_rs | !launch_fail_lsb), // TODO
 
   .foq_full(foq_full_foq),
 
@@ -221,7 +228,6 @@ BranchPredictor bp(
   .branch_addr(branch_addr_bp)
 );
 
-wire launch_fail_rs;
 wire [3:0] choose_tag_rs;
 wire [4:0] rs1_idx_rs;
 wire [4:0] rs2_idx_rs;
@@ -277,16 +283,73 @@ ReservationStation rs(
   .qk(qk_regfile)
 );
 
+wire [3:0] choose_tag_lsb;
+wire [4:0] rs1_idx_lsb;
+wire [4:0] rs2_idx_lsb;
+wire [4:0] rd_idx_lsb;
+wire inst_valid_lsb;
+wire [31:0] submit_val_lsb;
+wire [3:0] submit_tag_lsb;
+wire submit_valid_lsb;
+
+LoadStoreBuffer lsb(
+  .clk_in(clk_in),
+  .rst_in(rst_in),
+  .rdy_in(rdy_in),
+
+  .op(op_foq),
+  .branch_in(branch_foq),
+  .ls(ls_foq),
+  .use_imm(use_imm_foq),
+  .rd(rd_foq),
+  .rs1(rs1_foq),
+  .rs2(rs2_foq),
+  .imm(imm_foq),
+  .jalr(jalr_foq),
+  .addr(addr_foq),
+  .inst_valid(inst_valid_foq),
+
+  .cdb_tag(cdb_tag),
+  .cdb_val(cdb_val),
+  .cdb_addr(cdb_addr),
+  .cdb_active(cdb_active),
+
+  .launch_fail(launch_fail_lsb),
+  .choose_tag(choose_tag_lsb),
+  .rs1_idx(rs1_idx_lsb),
+  .rs2_idx(rs2_idx_lsb),
+  .rd_idx(rd_idx_lsb),
+  .inst_valid_out(inst_valid_lsb),
+
+  .submit_val(submit_val_lsb),
+  .submit_tag(submit_tag_lsb),
+  .submit_valid(submit_valid_lsb),
+
+  .st_val(st_val_lsb),
+  .ls_addr(ls_addr_lsb),
+  .r_nw_out(r_nw_lsb),
+  .type_out(type_lsb),
+  .activate_mem(activate_mem_lsb),
+
+  .ld_val(data_out_ctrl),
+  .ls_done_in(available_ctrl),
+
+  .vj(vj_regfile),
+  .vk(vk_regfile),
+  .qj(qj_regfile),
+  .qk(qk_regfile)
+);
+
 RegFile reg_file(
   .clk_in(clk_in),
   .rst_in(rst_in),
   .rdy_in(rdy_in),
 
-  .rd(rd_idx_rs),
-  .rs1(rs1_idx_rs),
-  .rs2(rs2_idx_rs),
-  .rd_tag(choose_tag_rs),
-  .inst_valid(inst_valid_rs),
+  .rd(rd_idx_rs | rd_idx_lsb),
+  .rs1(rs1_idx_rs | rs1_idx_lsb),
+  .rs2(rs2_idx_rs | rs2_idx_lsb),
+  .rd_tag(choose_tag_rs | choose_tag_lsb),
+  .inst_valid(inst_valid_rs | inst_valid_lsb),
 
   .cdb_tag(cdb_tag),
   .cdb_val(cdb_val),
@@ -297,6 +360,30 @@ RegFile reg_file(
   .vk(vk_regfile),
   .qj(qj_regfile),
   .qk(qk_regfile)
+);
+
+ReorderBuffer rob(
+  .clk_in(clk_in),
+  .rst_in(rst_in),
+  .rdy_in(rdy_in),
+  .push_tag(choose_tag_rs | choose_tag_lsb),
+  .push_src_addr(addr_foq),
+  .push_valid(inst_valid_foq),
+
+  .submit_tag_rs(submit_tag_rs),
+  .submit_val_rs(submit_val_rs),
+  .submit_valid_rs(submit_valid_rs),
+
+  .submit_tag_lsb(submit_tag_lsb),
+  .submit_val_lsb(submit_val_lsb),
+  .submit_valid_lsb(submit_valid_lsb),
+
+  .predict_fail(predict_fail_bp),
+
+  .cdb_tag(cdb_tag),
+  .cdb_val(cdb_val),
+  .cdb_addr(cdb_addr),
+  .cdb_active(cdb_active)
 );
 
 always @(posedge clk_in)

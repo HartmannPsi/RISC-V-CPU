@@ -31,20 +31,22 @@ module LoadStoreBuffer(
   // idx of register needed
   output wire [4:0] rs1_idx,
   output wire [4:0] rs2_idx,
+  output wire [4:0] rd_idx,
+  output wire inst_valid_out,
 
   // inst to rob
   output wire [31:0] submit_val,
   output wire [3:0] submit_tag,
   output wire submit_valid,
 
-  // ls ops to cache
+  // ls ops to mem_controller
   output wire [31:0] st_val,
   output wire [31:0] ls_addr,
   output wire r_nw_out, // 1: read, 0: write
   output wire [2:0] type_out, // [1:0]: 00: word, 01: half-word, 10: byte, [2]: 1: signed, 0: unsigned
-  output activate_cache,
+  output activate_mem,
 
-  // ls ops from cache
+  // ls ops from mem_controller
   input wire [31:0] ld_val,
   input wire ls_done_in,
 
@@ -154,6 +156,8 @@ wire [3:0] actual_qk = input_ld_inst ? `None : qk;
 assign choose_tag = inst_receive ? getTag(free_idx) : `None;
 assign rs1_idx = rs1;
 assign rs2_idx = rs2;
+assign rd_idx = input_ld_inst ? rd : 5'b0;
+assign inst_valid_out = inst_receive;
 
 wire [2:0] ready_idx = getReadyBuf();
 
@@ -207,7 +211,7 @@ always @(posedge clk_in) begin
       ongoing_idx <= ready_idx;
     end
 
-    if (submit_valid) begin // pop
+    if (submit_valid && ongoing_idx != 4'b1111) begin // pop
       rs_buffer[ongoing_idx] <= 143'b0;
       ongoing_idx <= 4'b1111;
     end
