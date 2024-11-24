@@ -45,6 +45,8 @@ wire r_nw_lsb;
 wire [2:0] type_lsb;
 wire activate_mem_lsb;
 
+wire predict_fail_bp;
+
 ram memory(
   .clk_in(clk_in),
   .en_in(rdy_in),
@@ -114,7 +116,6 @@ wire jalr_op_push;
 
 wire branch_bp;
 wire [31:0] branch_addr_bp;
-wire predict_fail_bp;
 wire [31:0] fail_addr_bp;
 wire jalr_compute_alu;
 wire [31:0] jalr_addr_alu;
@@ -123,7 +124,7 @@ wire foq_full_foq;
 
 InstProcessor processor(
   .clk_in(clk_in),
-  .rst_in(rst_in),
+  .rst_in(rst_in | predict_fail_bp),
   .rdy_in(rdy_in),
 
   .inst_available(icache_hit),
@@ -243,7 +244,7 @@ wire [3:0] qk_regfile;
 
 ReservationStation rs(
   .clk_in(clk_in),
-  .rst_in(rst_in),
+  .rst_in(rst_in | predict_fail_bp),
   .rdy_in(rdy_in),
 
   .op(op_foq),
@@ -294,7 +295,7 @@ wire submit_valid_lsb;
 
 LoadStoreBuffer lsb(
   .clk_in(clk_in),
-  .rst_in(rst_in),
+  .rst_in(rst_in | predict_fail_bp),
   .rdy_in(rdy_in),
 
   .op(op_foq),
@@ -342,7 +343,7 @@ LoadStoreBuffer lsb(
 
 RegFile reg_file(
   .clk_in(clk_in),
-  .rst_in(rst_in),
+  .rst_in(rst_in | predict_fail_bp),
   .rdy_in(rdy_in),
 
   .rd(rd_idx_rs | rd_idx_lsb),
@@ -364,7 +365,7 @@ RegFile reg_file(
 
 ReorderBuffer rob(
   .clk_in(clk_in),
-  .rst_in(rst_in),
+  .rst_in(rst_in | predict_fail_bp),
   .rdy_in(rdy_in),
   .push_tag(choose_tag_rs | choose_tag_lsb),
   .push_src_addr(addr_foq),
