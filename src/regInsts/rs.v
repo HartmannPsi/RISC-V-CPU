@@ -146,6 +146,20 @@ always @(posedge clk_in) begin
     // pause
   end
   else begin
+
+    if (submit_valid) begin // inner update
+      for (i = 0; i < 3; i = i + 1) begin
+        if (rs_buffer[i][0] && rs_buffer[i][13:10] == submit_tag) begin // qj == submit_tag
+          rs_buffer[i][13:10] <= `None; // qj <= None
+          rs_buffer[i][77:46] <= submit_val; // vj <= submit_val
+        end
+        if (rs_buffer[i][0] && rs_buffer[i][9:6] == submit_tag) begin // qk == submit_tag
+          rs_buffer[i][9:6] <= `None; // qk <= None
+          rs_buffer[i][45:14] <= submit_val; // vk <= submit_val
+        end
+      end
+    end
+
     if (cdb_active) begin // update
       for (i = 0; i < 3; i = i + 1) begin
         if (rs_buffer[i][0] && rs_buffer[i][13:10] == cdb_tag) begin // qj == cdb_tag

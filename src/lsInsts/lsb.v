@@ -44,7 +44,7 @@ module LoadStoreBuffer(
   output wire [31:0] ls_addr,
   output wire r_nw_out, // 1: read, 0: write
   output wire [2:0] type_out, // [1:0]: 00: word, 01: half-word, 10: byte, [2]: 1: signed, 0: unsigned
-  output activate_mem,
+  output wire activate_cache,
 
   // ls ops from mem_controller
   input wire [31:0] ld_val,
@@ -58,32 +58,47 @@ module LoadStoreBuffer(
   input wire [3:0] qk
 );
 
-reg [142:0] ls_buffer[9:0]; // {ls_done, imm, addr, vj, vk, qj, qk, op, busy}
-reg [3:0] i;
+reg [142:0] ls_buffer[9:0]; // {ls_ready, imm, addr, vj, vk, qj, qk, op, busy}
+reg [3:0] i, front, rear;
 reg [3:0] ongoing_idx;
 
+wire empty = front == rear;
+wire full = front == rear + 1 || (front == 0 && rear == 9);
+
 function [3:0] getFreeBuf;
-  begin
-    for (i = 0; i < 10; i = i + 1) begin
-      if (!ls_buffer[i][0]) begin
-        getFreeBuf = i;
-        return;
-      end
-    end
+  // begin
+  //   for (i = 0; i < 10; i = i + 1) begin
+  //     if (!ls_buffer[i][0]) begin
+  //       getFreeBuf = i;
+  //       return;
+  //     end
+  //   end
+  //   getFreeBuf = 4'b1111;
+  // end
+  if (full) begin
     getFreeBuf = 4'b1111;
+  end
+  else begin
+    getFreeBuf = rear;
   end
 endfunction
 
 function [3:0] getReadyBuf;
-  begin
-    for (i = 0; i < 10; i = i + 1) begin
-      if (ls_buffer[i][0] && ls_buffer[i][13:10] == `None &&
-                ls_buffer[i][9:6] == `None) begin // busy && qj == None && qk == None
-        getReadyBuf = i;
-        return;
-      end
-    end
+  // begin
+  //   for (i = 0; i < 10; i = i + 1) begin
+  //     if (ls_buffer[i][0] && ls_buffer[i][13:10] == `None &&
+  //               ls_buffer[i][9:6] == `None) begin // busy && qj == None && qk == None
+  //       getReadyBuf = i;
+  //       return;
+  //     end
+  //   end
+  //   getReadyBuf = 4'b1111;
+  // end
+  if (empty) begin
     getReadyBuf = 4'b1111;
+  end
+  else begin
+    getReadyBuf = front;
   end
 endfunction
 
@@ -99,17 +114,29 @@ function [3:0] getTag;
   end
 endfunction
 
-function buf_full
+function [3:0] getTagReverse;
+  input [3:0] tag;
   begin
-    for (i = 0; i < 10; i = i + 1) begin
-      if (!ls_buffer[i][0]) begin
-        buffer_full = 1'b0;
-        return;
-      end
+    if (tag >= 4'b0100 && tag < 4'b1110) begin
+      getTagReverse = tag - 4'b0100;
     end
-    buffer_full = 1'b1;
+    else begin
+      getTagReverse = 4'b1111;
+    end
   end
 endfunction
+
+// function buf_full
+//   begin
+//     for (i = 0; i < 10; i = i + 1) begin
+//       if (!ls_buffer[i][0]) begin
+//         buffer_full = 1'b0;
+//         return;
+//       end
+//     end
+//     buffer_full = 1'b1;
+//   end
+// endfunction
 
 function [2:0] getType;
   input [4:0] op;
@@ -146,10 +173,10 @@ wire input_ld_inst = (op == `LB || op == `LBU || op == `LH || op == `LHU || op =
 wire input_st_inst = (op == `SB || op == `SH || op == `SW);
 
 wire inst_receive = inst_valid && (input_ld_inst || input_st_inst); // ls insts
-wire buffer_full = buf_full();
+wire buffer_full = full;
 assign launch_fail = inst_receive && buffer_full;
 
-wire [2:0] free_idx = buffer_full ? 4'b1111 : (inst_receive ? getFreeBuf() : 4'b1111);
+wire [3:0] free_idx = buffer_full ? 4'b1111 : (inst_receive ? getFreeBuf() : 4'b1111);
 
 wire [3:0] actual_qk = input_ld_inst ? `None : qk;
 
@@ -159,7 +186,7 @@ assign rs2_idx = rs2;
 assign rd_idx = input_ld_inst ? rd : 5'b0;
 assign inst_valid_out = inst_receive;
 
-wire [2:0] ready_idx = getReadyBuf();
+wire [3:0] ready_idx = getReadyBuf();
 
 wire ready_ld_inst = ready_idx == 4'b1111 ? 1'b0 : (ls_buffer[ready_idx][5:1] == `LB || ls_buffer[ready_idx][5:1] == `LBU ||
                                                       ls_buffer[ready_idx][5:1] == `LH || ls_buffer[ready_idx][5:1] == `LHU ||
@@ -171,7 +198,7 @@ assign submit_valid = ongoing_idx != 4'b1111 && ls_done_in;
 assign submit_tag = submit_valid ? getTag(ongoing_idx) : `None;
 assign submit_val = submit_valid ? ld_val : 32'b0;
 
-assign activate_cache = ready_idx != 4'b1111 && !ls_buffer[ready_idx][142];
+assign activate_cache = ready_idx != 4'b1111 && ls_buffer[ready_idx][142]; // ls_ready
 assign r_nw_out = ready_ld_inst;
 assign type_out = getType(ls_buffer[ready_idx][5:1]);
 assign st_val = ls_buffer[ready_idx][45:14]; // vk
@@ -184,6 +211,8 @@ always @(posedge clk_in) begin
     end
     ongoing_idx <= 4'b1111;
     i <= 4'b0;
+    front <= 4'b0;
+    rear <= 4'b0;
   end
   else if (!rdy_in) begin
     // pause
@@ -202,9 +231,20 @@ always @(posedge clk_in) begin
         end
       end
     end
+    else begin // renew st inst
+      if (rs_buffer[ready_idx][109:78] == cdb_addr) begin // addr == cdb_addr
+        rs_buffer[ready_idx][142] <= 1'b1; // ls_ready
+      end
+    end
 
     if (free_idx != 4'b1111) begin // push
-      rs_buffer[free_idx] <= {1'b0, imm, addr, vj, vk, qj, actual_qk, op, 1'b1};
+      rs_buffer[free_idx] <= {input_ld_inst, imm, addr, vj, vk, qj, actual_qk, op, 1'b1};
+      if (rear == 9) begin
+        rear <= 4'b0;
+      end
+      else begin
+        rear <= rear + 1;
+      end
     end
 
     if (activate_cache) begin // store the idx to ongoing_idx
@@ -214,6 +254,12 @@ always @(posedge clk_in) begin
     if (submit_valid && ongoing_idx != 4'b1111) begin // pop
       rs_buffer[ongoing_idx] <= 143'b0;
       ongoing_idx <= 4'b1111;
+      if (front == 9) begin
+        front <= 4'b0;
+      end
+      else begin
+        front <= front + 1;
+      end
     end
   end
 end

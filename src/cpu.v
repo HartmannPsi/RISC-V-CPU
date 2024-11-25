@@ -330,7 +330,7 @@ LoadStoreBuffer lsb(
   .ls_addr(ls_addr_lsb),
   .r_nw_out(r_nw_lsb),
   .type_out(type_lsb),
-  .activate_mem(activate_mem_lsb),
+  .activate_cache(activate_mem_lsb),
 
   .ld_val(data_out_ctrl),
   .ls_done_in(available_ctrl),
@@ -356,6 +356,10 @@ RegFile reg_file(
   .cdb_val(cdb_val),
   .cdb_addr(cdb_addr),
   .cdb_active(cdb_active),
+
+  .submit_val_rs(submit_val_rs),
+  .submit_tag_rs(submit_tag_rs),
+  .submit_valid_rs(submit_valid_rs),
 
   .vj(vj_regfile),
   .vk(vk_regfile),
