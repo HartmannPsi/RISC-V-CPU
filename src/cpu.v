@@ -64,6 +64,7 @@ wire [2:0] type_ctrl_icache = 3'b000;
 // fixed in icache: read only, LW mode
 wire [31:0] data_out_ctrl;
 wire icache_hit;
+wire icache_block;
 
 MemController mem_ctrl(
   .clk_in(clk_in),
@@ -75,13 +76,26 @@ MemController mem_ctrl(
   .mem_addr(mem_addr_ram_ctrl),
   .r_nw_out(r_nw_ram_ctrl),
 
-  .addr_in(addr_ctrl_icache | ls_addr_lsb),
-  .data_in(data_in_ctrl_icache | st_val_lsb),
-  .r_nw_in(r_nw_ctrl_icache | r_nw_lsb),
-  .type_in(type_ctrl_icache | type_lsb),
-  .activate_in(~icache_hit | activate_mem_lsb),
+  // .addr_in(addr_ctrl_icache | ls_addr_lsb),
+  // .data_in(data_in_ctrl_icache | st_val_lsb),
+  // .r_nw_in(r_nw_ctrl_icache | r_nw_lsb),
+  // .type_in(type_ctrl_icache | type_lsb),
+  // .activate_in(~icache_hit | activate_mem_lsb),
+  .addr_in_icache(addr_ctrl_icache),
+  .data_in_icache(data_in_ctrl_icache),
+  .r_nw_in_icache(r_nw_ctrl_icache),
+  .type_in_icache(type_ctrl_icache),
+  .activate_in_icache(~icache_hit),
+
+  .addr_in_lsb(ls_addr_lsb),
+  .data_in_lsb(st_val_lsb),
+  .r_nw_in_lsb(r_nw_lsb),
+  .type_in_lsb(type_lsb),
+  .activate_in_lsb(activate_mem_lsb),
+
   .data_out(data_out_ctrl),
   .data_available(available_ctrl),
+  .icache_block(icache_block),
 
   .io_buffer_full(io_buffer_full)
 );
@@ -97,9 +111,10 @@ InstCache icache(
   .addr_in(addr_icache_prcs),
   .data_out(data_icache_prcs),
 
-  .rewrite_data(data_out_ctrl_icache),
+  .rewrite_data(data_out_ctrl),
   .addr_out(addr_ctrl_icache),
-  .write_enable(available_ctrl_icache),
+  .write_enable(available_ctrl),
+  .icache_block(icache_block),
 
   .cache_hit(icache_hit)
 );

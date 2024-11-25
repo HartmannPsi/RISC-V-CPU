@@ -17,6 +17,8 @@ module InstCache(
   // whether to write data to cache
   input wire write_enable,
 
+  input wire icache_block,
+
   // whether hit cache
   output wire cache_hit
 );
@@ -24,6 +26,7 @@ module InstCache(
 // addr: [31:7]: tag, [6:2]: idx, [1:0]: 2'b00
 wire tag = addr_in[31:2 + `ICACHE_ADDR_W];
 wire idx = addr_in[1 + `ICACHE_ADDR_W:2];
+wire we = write_enable && icache_block;
 
 reg [31:0] cache[`ICACHE_SIZE - 1:0];
 reg [31 - 2 - `ICACHE_ADDR_W:0] tags[`ICACHE_SIZE - 1:0];
@@ -47,7 +50,7 @@ always @(posedge clk_in) begin
     // pause
   end
   else begin
-    if (write_enable) begin
+    if (we) begin
       cache[idx] <= rewrite_data;
       tags[idx] <= tag;
       busy[idx] <= 1'b1;

@@ -10,24 +10,41 @@ module MemController(
   output wire [31:0] mem_addr,
   output wire r_nw_out,          // read/write select (read: 1, write: 0)
 
-  input wire [31:0] addr_in,
-  input wire [31:0] data_in,
-  input wire r_nw_in,
-  input wire [2:0] type_in, // [1:0]: 00 for word, 01 for half-word, 10 for byte; [2]: 1 for signed, 0 for unsigned
-  input wire activate_in,
+  input wire [31:0] addr_in_icache,
+  input wire [31:0] data_in_icache,
+  input wire r_nw_in_icache,
+  input wire [2:0] type_in_icache, // [1:0]: 00 for word, 01 for half-word, 10 for byte; [2]: 1 for signed, 0 for unsigned
+  input wire activate_in_icache,
+
+  input wire [31:0] addr_in_lsb,
+  input wire [31:0] data_in_lsb,
+  input wire r_nw_in_lsb,
+  input wire [2:0] type_in_lsb, // [1:0]: 00 for word, 01 for half-word, 10 for byte; [2]: 1 for signed, 0 for unsigned
+  input wire activate_in_lsb,
+
   output wire [31:0] data_out,
   output reg data_available, // 1 for data_out is valid
+  output wire icache_block, // 1 for icache pending
 
   input wire io_buffer_full
 );
 
+wire [31:0] addr_in = activate_in_lsb ? addr_in_lsb : addr_in_icache;
+wire [31:0] data_in = activate_in_lsb ? data_in_lsb : data_in_icache;
+wire r_nw_in = activate_in_lsb ? r_nw_in_lsb : r_nw_in_icache;
+wire [2:0] type_in = activate_in_lsb ? type_in_lsb : type_in_icache;
+wire activate_in  = activate_in_lsb || activate_in_icache;
+
 reg [31:0] data;
 reg [31:0] addr;
 reg r_nw;
+reg block;
 reg [2:0] type;
 reg [1:0] state;
 
 wire called = rdy_in && activate_in && !io_buffer_full && !data_available;
+
+assign icache_block = block || activate_in_lsb;
 
 assign r_nw_out = (called && state == 2'b0) ? r_nw_in : r_nw;
 
@@ -54,20 +71,26 @@ always @(posedge clk_in) begin
     r_nw <= 1'b0;
     type <= 3'b0;
     state <= 2'b0;
+    block <= 1'b0;
   end
-  else if(!rdy_in) begin
+  else if (!rdy_in) begin
     // pause
   end
   else begin
 
     if (data_available) begin
       data_available <= 1'b0;
+      block <= 1'b0;
     end
     else begin
       case (state)
       2'b00: // free state
       begin
         if (called) begin
+
+          if (activate_in_lsb) begin // icache block
+            block <= 1'b1;
+          end
 
           if (type_in[1:0] == 2'b10) begin // byte operation
             state <= 2'b00;
