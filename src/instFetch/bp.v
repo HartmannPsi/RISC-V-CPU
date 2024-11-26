@@ -1,4 +1,4 @@
-`include "../macros.v"
+`include "src/macros.v"
 
 module BranchPredictor(
   input wire clk_in,
@@ -34,7 +34,7 @@ reg [64:0] bp_queue [0:`BP_SIZE-1]; // {src_addr, fail_addr, br}
 reg [32:0] bp_fsm[0:`BP_SIZE-1]; // [32]: used [31:2] :src_addr, [1:0]: 00: SNT, 01: WNT, 10: WT, 11: ST
 reg [`BP_SIZE_W - 1:0] front, rear, i;
 
-function [`BP_SIZE_W - 1:0] distribute // get the idx of fsm
+function [`BP_SIZE_W - 1:0] distribute; // get the idx of fsm
   input [31:0] src_addr;
 
   for (i = 0; i < `BP_SIZE; i = i + 1) begin
@@ -53,9 +53,9 @@ endfunction
 wire need_predict = branch && rdy_in;
 assign need_branch = need_predict ? bp_fsm[distribute(pc_in)][1:0] > 2'b01 : 1'b0;
 assign branch_addr = need_branch ? pc_in + imm : 32'b0;
-wire [31:0] fail_addr = need_predict ? (need_branch ? pc_in + 4 : pc_in + imm) : 32'b0;
+wire [31:0] fail_addr_in = need_predict ? (need_branch ? pc_in + 4 : pc_in + imm) : 32'b0;
 
-wire[31:0] head_src_addr = bp_queue[front][64:33], head_fail_addr = bp_queue[front][32:1];
+wire [31:0] head_src_addr = bp_queue[front][64:33], head_fail_addr = bp_queue[front][32:1];
 wire head_br = bp_queue[front][0];
 wire calc_res = cdb_val[0];
 
@@ -79,7 +79,7 @@ always @(posedge clk_in) begin
     end
     else begin
       if (need_predict) begin // push
-        bp_queue[rear] <= {pc_in, fail_addr, need_branch};
+        bp_queue[rear] <= {pc_in, fail_addr_in, need_branch};
         if (rear == `BP_SIZE - 1) begin
           rear <= 0;
         end

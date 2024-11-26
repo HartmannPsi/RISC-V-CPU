@@ -1,17 +1,17 @@
-`include "../macros.v"
+`include "src/macros.v"
 
 module InstDecoder(
   input wire [31:0] inst,
 
-  output wire [4:0] op,
-  output wire branch,
-  output wire ls,
-  output wire use_imm,
-  output wire [4:0] rd,
-  output wire [4:0] rs1,
-  output wire [4:0] rs2,
-  output wire [31:0] imm,
-  output wire jalr
+  output reg [4:0] op,
+  output reg branch,
+  output reg ls,
+  output reg use_imm,
+  output reg [4:0] rd,
+  output reg [4:0] rs1,
+  output reg [4:0] rs2,
+  output reg [31:0] imm,
+  output reg jalr
 );
 
 wire [6:0] opcode = inst[6:0];
@@ -19,11 +19,12 @@ wire [2:0] funct3 = inst[14:12];
 wire [6:0] funct7 = inst[31:25];
 
 always @(*) begin
-  ls = (opcode == `LD_OP) || (opcode == `ST_OP);
-  branch = (opcode == `BR_OP); // || (opcode == `JAL_OP); // || (opcode == `JALR_OP);
+  ls = (opcode == `LD_OP) || (opcode == `ST_OP) ? 1'b1 : 1'b0;
+  branch = (opcode == `BR_OP) ? 1'b1 : 1'b0; // || (opcode == `JAL_OP); // || (opcode == `JALR_OP);
   rd = inst[11:7];
   rs1 = inst[19:15];
   rs2 = inst[24:20];
+  jalr = (opcode == `JALR_OP) ? 1'b1 : 1'b0;
 
   case (opcode)
   `BIN_OP:
@@ -82,7 +83,7 @@ always @(*) begin
     if (funct3 == 3'b001 || funct3 == 3'b101)
       imm = {27'b0, inst[24:20]};
     else
-      imm = {20{inst[31]}, inst[31:20]};
+      imm = {{20{inst[31]}}, inst[31:20]};
 
     use_imm = 1;
   end
@@ -102,7 +103,7 @@ always @(*) begin
     op = `LHU;
     endcase
 
-    imm = {20{inst[31]}, inst[31:20]};
+    imm = {{20{inst[31]}}, inst[31:20]};
     use_imm = 1;
   end
 
@@ -117,7 +118,7 @@ always @(*) begin
     op = `SW;
     endcase
 
-    imm = {20{inst[31]}, inst[31:25], inst[11:7]};
+    imm = {{20{inst[31]}}, inst[31:25], inst[11:7]};
     use_imm = 1;
   end
 
@@ -138,21 +139,21 @@ always @(*) begin
     op = `BGEU;
     endcase
 
-    imm = {20{inst[31]}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
+    imm = {{20{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
     use_imm = 1;
   end
 
   `JAL_OP:
   begin
     op = `JAL;
-    imm = {20{inst[31]}, inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
+    imm = {{20{inst[31]}}, inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
     use_imm = 1;
   end
 
   `JALR_OP:
   begin
     op = `JALR;
-    imm = {20{inst[31]}, inst[31:20]};
+    imm = {{20{inst[31]}}, inst[31:20]};
     use_imm = 1;
   end
 
@@ -170,7 +171,6 @@ always @(*) begin
     use_imm = 1;
   end
   endcase
-  jalr = (op == `JALR);
 end
 
 endmodule

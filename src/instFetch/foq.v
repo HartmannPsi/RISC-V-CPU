@@ -1,4 +1,4 @@
-`include "../macros.v"
+`include "src/macros.v"
 
 module FpOpQueue(
   input wire clk_in,

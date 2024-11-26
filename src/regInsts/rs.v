@@ -1,4 +1,4 @@
-`include "../macros.v"
+`include "src/macros.v"
 
 module ReservationStation(
   input wire clk_in,
@@ -129,7 +129,7 @@ ALU alu(
   .result(submit_val),
   .zero(),
   .c_out(),
-  .overflow()
+  .overflow(),
   .jalr_done(jalr_done),
   .jalr_addr(jalr_addr)
 );

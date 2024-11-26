@@ -1,7 +1,7 @@
 // deprecated
-`include "../macros.v"
+`include "src/macros.v"
 
-module InstCache(
+module DataCache(
   input wire clk_in,
   input wire rst_in,
   input wire rdy_in,
@@ -42,7 +42,7 @@ reg [7:0] cache[`DCACHE_SIZE - 1:0];
 reg [31 - 2 - `DCACHE_ADDR_W:0] tags[`DCACHE_SIZE - 1:0];
 reg busy[`DCACHE_SIZE - 1:0];
 reg update[`DCACHE_SIZE - 1:0];
-reg [`DCACHE_SIZE_W - 1:0] i;
+reg [`DCACHE_ADDR_W - 1:0] i;
 reg [2:0] state;
 reg [31:0] tmp_addr;
 wire [`DCACHE_ADDR_W - 1:0] tmp_idx = tmp_addr[1 + `DCACHE_ADDR_W:2];

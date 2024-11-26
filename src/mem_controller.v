@@ -1,4 +1,4 @@
-`include "macros.v"
+`include "src/macros.v"
 
 module MemController(
   input wire clk_in,
@@ -60,8 +60,8 @@ assign data_out = type[2] ?
                             (type[1:0] == 2'b00 ?
                                                   {mem_read, data[23:0]} :                                       // LW
                                                   (type[1:0] == 2'b01 ?
-                                                                        {16{mem_read[7]}, mem_read, data[7:0]} : // LH
-                                                                        {24{mem_read[7]}, mem_read}));           // LB
+                                                                        {{16{mem_read[7]}}, mem_read, data[7:0]} : // LH
+                                                                        {{24{mem_read[7]}}, mem_read}));           // LB
 
 always @(posedge clk_in) begin
   if (rst_in) begin

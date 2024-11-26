@@ -1,4 +1,4 @@
-`include "../macros.v"
+`include "src/macros.v"
 
 module InstCache(
   input wire clk_in,
@@ -31,7 +31,7 @@ wire we = write_enable && icache_block;
 reg [31:0] cache[`ICACHE_SIZE - 1:0];
 reg [31 - 2 - `ICACHE_ADDR_W:0] tags[`ICACHE_SIZE - 1:0];
 reg busy[`ICACHE_SIZE - 1:0];
-reg [`ICACHE_SIZE_W - 1:0] i;
+reg [`ICACHE_ADDR_W - 1:0] i;
 
 assign cache_hit = busy[idx] && (tags[idx] == tag);
 assign data_out = cache_hit ? cache[idx] : 32'b0;

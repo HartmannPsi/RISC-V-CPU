@@ -1,4 +1,4 @@
-`include "../macros.v"
+`include "src/macros.v"
 
 module LoadStoreBuffer(
   input wire clk_in,

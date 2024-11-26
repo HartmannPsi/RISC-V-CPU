@@ -1,4 +1,4 @@
-`include "../macros.v"
+`include "src/macros.v"
 
 module InstProcessor(
   input wire clk_in,

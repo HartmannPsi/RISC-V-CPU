@@ -1,4 +1,4 @@
-`include "../macros.v"
+`include "src/macros.v"
 
 module ReorderBuffer(
   input wire clk_in,
@@ -75,39 +75,39 @@ always @(posedge clk_in) begin
 
       if (submit_valid_rs) begin // submit from rs
       
-        for (i = front; i != rear;) begin : loop_label // traverse
+        for (i = front; i != rear; i = (i == `ROB_SIZE - 1) ? 0 : i + 1) begin : loop_label_1 // traverse
 
           if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_rs) begin // unsolved && tag match
             rob_queue[i][0] <= 1'b1;
             rob_queue[i][64:33] <= submit_val_rs;
-            disable loop_label; // break
+            disable loop_label_1; // break
           end
 
-          if (i == `ROB_SIZE - 1) begin
-            i = 0;
-          end
-          else begin
-            i = i + 1;
-          end
+          // if (i == `ROB_SIZE - 1) begin
+          //   i = 0;
+          // end
+          // else begin
+          //   i = i + 1;
+          // end
         end
       end
 
       if (submit_valid_lsb) begin // submit from lsb
       
-        for (i = front; i != rear;) begin : loop_label // traverse
+        for (i = front; i != rear; i = (i == `ROB_SIZE - 1) ? 0 : i + 1) begin : loop_label_2 // traverse
 
           if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_lsb) begin // unsolved && tag match
             rob_queue[i][0] <= 1'b1;
             rob_queue[i][64:33] <= submit_val_lsb;
-            disable loop_label; // break
+            disable loop_label_2; // break
           end
 
-          if (i == `ROB_SIZE - 1) begin
-            i = 0;
-          end
-          else begin
-            i = i + 1;
-          end
+          // if (i == `ROB_SIZE - 1) begin
+          //   i = 0;
+          // end
+          // else begin
+          //   i = i + 1;
+          // end
         end
       end
 
