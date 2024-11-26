@@ -1,4 +1,4 @@
-`inlcude "../macros.v"
+`include "../macros.v"
 
 module RegFile(
   input wire clk_in,

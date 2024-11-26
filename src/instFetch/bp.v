@@ -1,4 +1,4 @@
-`inlcude "../macros.v"
+`include "../macros.v"
 
 module BranchPredictor(
   input wire clk_in,

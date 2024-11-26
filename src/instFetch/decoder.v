@@ -1,4 +1,4 @@
-`inlcude "../macros.v"
+`include "../macros.v"
 
 module InstDecoder(
   input wire [31:0] inst,

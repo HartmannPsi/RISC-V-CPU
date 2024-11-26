@@ -1,5 +1,5 @@
 // deprecated
-`inlcude "../macros.v"
+`include "../macros.v"
 
 module InstCache(
   input wire clk_in,
