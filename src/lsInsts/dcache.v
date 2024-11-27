@@ -42,13 +42,13 @@ reg [7:0] cache[`DCACHE_SIZE - 1:0];
 reg [31 - 2 - `DCACHE_ADDR_W:0] tags[`DCACHE_SIZE - 1:0];
 reg busy[`DCACHE_SIZE - 1:0];
 reg update[`DCACHE_SIZE - 1:0];
-reg [`DCACHE_ADDR_W - 1:0] i;
+integer i;
 reg [2:0] state;
 reg [31:0] tmp_addr;
 wire [`DCACHE_ADDR_W - 1:0] tmp_idx = tmp_addr[1 + `DCACHE_ADDR_W:2];
 wire [31 - 2 - `DCACHE_ADDR_W:0] tmp_tag = tmp_addr[31:2 + `DCACHE_ADDR_W];
 reg tmp_r_nw;
-reg [2:0] type;
+reg [2:0] type_;
 reg [31:0] data;
 reg cache_miss;
 
@@ -71,11 +71,11 @@ always @(posedge clk_in) begin
     state <= 3'b0;
     tmp_addr <= 32'b0;
     tmp_r_nw <= 1'b0;
-    type <= 3'b0;
+    type_ <= 3'b0;
     data <= 32'b0;
     cache_miss <= 1'b0;
     data_available <= 1'b0;
-    i <= 0;
+    //i <= 0;
   end
   else if (!rdy_in) begin
     // pause
@@ -91,7 +91,7 @@ always @(posedge clk_in) begin
       if (activate_cache) begin
         tmp_addr <= addr_in;
         tmp_r_nw <= r_nw_in;
-        type <= type_in;
+        type_ <= type_in;
         data <= data_write;
         cache_miss <= !cache_hit;
         state <= 3'b100;
@@ -114,11 +114,11 @@ always @(posedge clk_in) begin
       end
       busy[tmp_idx] <= 1'b1;
 
-      if (type[1:0] == 2'b10) begin // byte operation
+      if (type_[1:0] == 2'b10) begin // byte operation
         state <= 3'b000;
         tmp_addr <= 32'b0;
         tmp_r_nw <= 1'b0;
-        type <= 3'b0;
+        type_ <= 3'b0;
         data <= 32'b0;
         cache_miss <= 1'b0;
         data_available <= 1'b1;
@@ -150,11 +150,11 @@ always @(posedge clk_in) begin
       end
       busy[tmp_idx] <= 1'b1;
 
-      if (type[1:0] == 2'b01) begin // half-word operation
+      if (type_[1:0] == 2'b01) begin // half-word operation
         state <= 3'b000;
         tmp_addr <= 32'b0;
         tmp_r_nw <= 1'b0;
-        type <= 3'b0;
+        type_ <= 3'b0;
         data <= 32'b0;
         cache_miss <= 1'b0;
         data_available <= 1'b1;
@@ -213,7 +213,7 @@ always @(posedge clk_in) begin
         state <= 3'b000;
         tmp_addr <= 32'b0;
         tmp_r_nw <= 1'b0;
-        type <= 3'b0;
+        type_ <= 3'b0;
         data <= 32'b0;
         cache_miss <= 1'b0;
         data_available <= 1'b1;

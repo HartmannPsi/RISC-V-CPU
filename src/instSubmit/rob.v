@@ -31,12 +31,16 @@ module ReorderBuffer(
 );
 
 reg [68:0] rob_queue[`ROB_SIZE - 1:0]; // {tag, val, addr, solved}
-reg [`ROB_SIZE_W - 1:0] front, rear, i;
+reg [`ROB_SIZE_W - 1:0] front, rear;
+integer i;
 
 assign cdb_active = rob_queue[front][0];
 assign cdb_addr = rob_queue[front][32:1];
 assign cdb_val = rob_queue[front][64:33];
 assign cdb_tag = rob_queue[front][68:65];
+
+integer idx_rs;
+integer idx_lsb;
 
 wire [68:0] push_data = {push_tag, 32'b0, push_src_addr, 1'b0};
 
@@ -47,7 +51,7 @@ always @(posedge clk_in) begin
     end
     front <= 0;
     rear <= 0;
-    i <= 0;
+    //i <= 0;
   end
   else if (!rdy_in) begin
     // pause
@@ -74,12 +78,12 @@ always @(posedge clk_in) begin
       end
 
       if (submit_valid_rs) begin // submit from rs
-      
-        for (i = front; i != rear; i = (i == `ROB_SIZE - 1) ? 0 : i + 1) begin : loop_label_1 // traverse
+
+      idx_rs = -1;
+        for (i = {28'b0, front}; i != {28'b0, rear}; i = (i == `ROB_SIZE - 1) ? 0 : i + 1) begin : loop_label_1 // traverse
 
           if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_rs) begin // unsolved && tag match
-            rob_queue[i][0] <= 1'b1;
-            rob_queue[i][64:33] <= submit_val_rs;
+            idx_rs = i;
             disable loop_label_1; // break
           end
 
@@ -90,15 +94,20 @@ always @(posedge clk_in) begin
           //   i = i + 1;
           // end
         end
+
+        if (idx_rs != -1) begin
+          rob_queue[idx_rs][0] <= 1'b1;
+          rob_queue[idx_rs][64:33] <= submit_val_rs;
+        end
       end
 
       if (submit_valid_lsb) begin // submit from lsb
-      
-        for (i = front; i != rear; i = (i == `ROB_SIZE - 1) ? 0 : i + 1) begin : loop_label_2 // traverse
+
+        idx_lsb = -1;
+        for (i = {28'b0, front}; i != {28'b0, rear}; i = (i == `ROB_SIZE - 1) ? 0 : i + 1) begin : loop_label_2 // traverse
 
           if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_lsb) begin // unsolved && tag match
-            rob_queue[i][0] <= 1'b1;
-            rob_queue[i][64:33] <= submit_val_lsb;
+            idx_lsb = i;
             disable loop_label_2; // break
           end
 
@@ -108,6 +117,11 @@ always @(posedge clk_in) begin
           // else begin
           //   i = i + 1;
           // end
+        end
+
+        if (idx_lsb != -1) begin
+          rob_queue[idx_lsb][0] <= 1'b1;
+          rob_queue[idx_lsb][64:33] <= submit_val_lsb;
         end
       end
 

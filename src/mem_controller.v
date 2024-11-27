@@ -39,7 +39,7 @@ reg [31:0] data;
 reg [31:0] addr;
 reg r_nw;
 reg block;
-reg [2:0] type;
+reg [2:0] type_;
 reg [1:0] state;
 
 wire called = rdy_in && activate_in && !io_buffer_full && !data_available;
@@ -50,16 +50,55 @@ assign r_nw_out = (called && state == 2'b0) ? r_nw_in : r_nw;
 
 assign mem_addr = (called && state == 2'b0) ? addr_in : addr;
 
-assign mem_write = r_nw_out ? 8'b0 : ((called && state == 2'b0) ? data_in[7:0] : data[7 + state * 8 : state * 8]);
+function [7:0] memWrite;
+  input [1:0] state_arg;
+  input r_nw_arg;
+  input [31:0] data_arg;
+  input called_arg;
+  input [7:0] data_in_arg;
+
+  begin
+    if (r_nw_arg) begin
+      memWrite = 8'b0;
+    end
+    else begin
+      if (called_arg && state_arg == 2'b0) begin
+        memWrite = data_in_arg;
+      end
+      else begin
+        // memWrite = data_arg[7 + (state_arg << 3) : (state_arg << 3)];
+        case (state_arg)
+         2'b01:
+         begin
+          memWrite = data_arg[15:8];
+         end
+         2'b10:
+          begin
+            memWrite = data_arg[23:16];
+          end
+          2'b11:
+          begin
+            memWrite = data_arg[31:24];
+          end
+        endcase
+      end
+    end
+  end
+
+endfunction
+
+assign mem_write = memWrite(state, r_nw, data, called, data_in[7:0]);
+
+// assign mem_write = r_nw_out ? 8'b0 : ((called && state == 2'b0) ? data_in[7:0] : data[7 + state * 8 : state * 8]);
 
 // 000: LW, 001: LH, 010: LB, 101: LHU, 110: LBU
-assign data_out = type[2] ?
-                            (type[1:0] == 2'b01 ?
+assign data_out = type_[2] ?
+                            (type_[1:0] == 2'b01 ?
                                                   {16'b0, mem_read, data[7:0]} :                                 // LHU
                                                   {24'b0, mem_read}) :                                           // LBU
-                            (type[1:0] == 2'b00 ?
+                            (type_[1:0] == 2'b00 ?
                                                   {mem_read, data[23:0]} :                                       // LW
-                                                  (type[1:0] == 2'b01 ?
+                                                  (type_[1:0] == 2'b01 ?
                                                                         {{16{mem_read[7]}}, mem_read, data[7:0]} : // LH
                                                                         {{24{mem_read[7]}}, mem_read}));           // LB
 
@@ -69,7 +108,7 @@ always @(posedge clk_in) begin
     data <= 32'b0;
     addr <= 32'b0;
     r_nw <= 1'b0;
-    type <= 3'b0;
+    type_ <= 3'b0;
     state <= 2'b0;
     block <= 1'b0;
   end
@@ -100,7 +139,7 @@ always @(posedge clk_in) begin
             state <= 2'b01;
             addr <= addr_in + 1;
             r_nw <= r_nw_in;
-            type <= type_in;
+            type_ <= type_in;
             if (!r_nw_in) begin // write
               data <= data_in;
             end
@@ -114,10 +153,10 @@ always @(posedge clk_in) begin
         if (r_nw) begin
           data[7:0] <= mem_read;
         end
-        if (type[1:0] == 2'b01) begin // half-word opertion
+        if (type_[1:0] == 2'b01) begin // half-word opertion
           addr <= 32'b0;
           r_nw <= 1'b0;
-          type <= 3'b0;
+          type_ <= 3'b0;
           data_available <= 1'b1;
           state <= 2'b00;
         end
@@ -144,7 +183,7 @@ always @(posedge clk_in) begin
         state <= 2'b00;
         addr <= 32'b0;
         r_nw <= 1'b0;
-        type <= 3'b0;
+        type_ <= 3'b0;
         data_available <= 1'b1;
       end
       endcase

@@ -66,6 +66,7 @@ wire empty = front == rear;
 wire full = front == rear + 1 || (front == 0 && rear == 9);
 
 function [3:0] getFreeBuf;
+  input m;
   // begin
   //   for (i = 0; i < 10; i = i + 1) begin
   //     if (!ls_buffer[i][0]) begin
@@ -84,6 +85,7 @@ function [3:0] getFreeBuf;
 endfunction
 
 function [3:0] getReadyBuf;
+  input m;
   // begin
   //   for (i = 0; i < 10; i = i + 1) begin
   //     if (ls_buffer[i][0] && ls_buffer[i][13:10] == `None &&
@@ -103,10 +105,10 @@ function [3:0] getReadyBuf;
 endfunction
 
 function [3:0] getTag;
-  input [3:0] i;
+  input [3:0] id;
   begin
-    if (i >= 0 && i < 10) begin
-      getTag = i + 4'b0100;
+    if (id < 10) begin
+      getTag = id + 4'b0100;
     end
     else begin
       getTag = `None;
@@ -176,7 +178,7 @@ wire inst_receive = inst_valid && (input_ld_inst || input_st_inst); // ls insts
 wire buffer_full = full;
 assign launch_fail = inst_receive && buffer_full;
 
-wire [3:0] free_idx = buffer_full ? 4'b1111 : (inst_receive ? getFreeBuf() : 4'b1111);
+wire [3:0] free_idx = buffer_full ? 4'b1111 : (inst_receive ? getFreeBuf(1'b0) : 4'b1111);
 
 wire [3:0] actual_qk = input_ld_inst ? `None : qk;
 
@@ -186,7 +188,7 @@ assign rs2_idx = rs2;
 assign rd_idx = input_ld_inst ? rd : 5'b0;
 assign inst_valid_out = inst_receive;
 
-wire [3:0] ready_idx = getReadyBuf();
+wire [3:0] ready_idx = getReadyBuf(1'b0);
 
 wire ready_ld_inst = ready_idx == 4'b1111 ? 1'b0 : (ls_buffer[ready_idx][5:1] == `LB || ls_buffer[ready_idx][5:1] == `LBU ||
                                                       ls_buffer[ready_idx][5:1] == `LH || ls_buffer[ready_idx][5:1] == `LHU ||
@@ -198,7 +200,7 @@ assign submit_valid = ongoing_idx != 4'b1111 && ls_done_in;
 assign submit_tag = submit_valid ? getTag(ongoing_idx) : `None;
 assign submit_val = submit_valid ? ld_val : 32'b0;
 
-assign activate_cache = ready_idx != 4'b1111 && ls_buffer[ready_idx][142]; // ls_ready
+assign activate_cache = ready_idx != 4'b1111 && ls_buffer[ready_idx][142] && (ls_buffer[ready_idx][13:10] == `None) && (ls_buffer[ready_idx][9:6] == `None); // ls_ready
 assign r_nw_out = ready_ld_inst;
 assign type_out = getType(ls_buffer[ready_idx][5:1]);
 assign st_val = ls_buffer[ready_idx][45:14]; // vk
@@ -221,24 +223,24 @@ always @(posedge clk_in) begin
 
     if (cdb_active) begin // update
       for (i = 0; i < 10; i = i + 1) begin
-        if (rs_buffer[i][0] && rs_buffer[i][13:10] == cdb_tag) begin // qj == cdb_tag
-          rs_buffer[i][13:10] <= `None; // qj <= None
-          rs_buffer[i][77:46] <= cdb_val; // vj <= cdb_val
+        if (ls_buffer[i][0] && ls_buffer[i][13:10] == cdb_tag) begin // qj == cdb_tag
+          ls_buffer[i][13:10] <= `None; // qj <= None
+          ls_buffer[i][77:46] <= cdb_val; // vj <= cdb_val
         end
-        if (rs_buffer[i][0] && rs_buffer[i][9:6] == cdb_tag) begin // qk == cdb_tag
-          rs_buffer[i][9:6] <= `None; // qk <= None
-          rs_buffer[i][45:14] <= cdb_val; // vk <= cdb_val
+        if (ls_buffer[i][0] && ls_buffer[i][9:6] == cdb_tag) begin // qk == cdb_tag
+          ls_buffer[i][9:6] <= `None; // qk <= None
+          ls_buffer[i][45:14] <= cdb_val; // vk <= cdb_val
         end
       end
     end
     else begin // renew st inst
-      if (rs_buffer[ready_idx][109:78] == cdb_addr) begin // addr == cdb_addr
-        rs_buffer[ready_idx][142] <= 1'b1; // ls_ready
+      if (ls_buffer[ready_idx][109:78] == cdb_addr) begin // addr == cdb_addr
+        ls_buffer[ready_idx][142] <= 1'b1; // ls_ready
       end
     end
 
     if (free_idx != 4'b1111) begin // push
-      rs_buffer[free_idx] <= {input_ld_inst, imm, addr, vj, vk, qj, actual_qk, op, 1'b1};
+      ls_buffer[free_idx] <= {input_ld_inst, imm, addr, vj, vk, qj, actual_qk, op, 1'b1};
       if (rear == 9) begin
         rear <= 4'b0;
       end
@@ -252,7 +254,7 @@ always @(posedge clk_in) begin
     end
 
     if (submit_valid && ongoing_idx != 4'b1111) begin // pop
-      rs_buffer[ongoing_idx] <= 143'b0;
+      ls_buffer[ongoing_idx] <= 143'b0;
       ongoing_idx <= 4'b1111;
       if (front == 9) begin
         front <= 4'b0;

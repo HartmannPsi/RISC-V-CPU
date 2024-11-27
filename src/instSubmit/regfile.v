@@ -32,10 +32,10 @@ module RegFile(
 
 reg [31:0] reg_file[31:0];
 reg [3:0] depend_file[31:0];
-reg [4:0] i;
+integer i;
 
-assign reg_file[0] = 32'b0;
-assign depend_file[0] = 4'b0;
+// assign reg_file[0] = 32'b0;
+// assign depend_file[0] = 4'b0;
 
 assign qj = inst_valid ? depend_file[rs1] : `None;
 assign qk = inst_valid ? depend_file[rs2] : `None;
@@ -45,16 +45,19 @@ assign vk = (inst_valid && qk == `None) ? reg_file[rs2] : 32'b0;
 
 always @(posedge clk_in) begin
   if (rst_in) begin
-    for (i = 1; i < 32; i = i + 1) begin
+    for (i = 0; i < 32; i = i + 1) begin
       reg_file[i] <= 32'b0;
       depend_file[i] <= 4'b0;
     end
-    i <= 0;
+    //i <= 0;
   end
   else if (!rdy_in) begin
     // pause
   end
   else begin
+    reg_file[0] <= 32'b0;
+    depend_file[0] <= 4'b0;
+
     if (inst_valid && rd != 5'b0) begin // update depend of rd according to inst launched
       depend_file[rd] <= rd_tag;
     end

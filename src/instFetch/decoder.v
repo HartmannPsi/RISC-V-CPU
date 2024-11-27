@@ -139,14 +139,14 @@ always @(*) begin
     op = `BGEU;
     endcase
 
-    imm = {{20{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
+    imm = {{19{inst[31]}}, inst[31], inst[7], inst[30:25], inst[11:8], 1'b0};
     use_imm = 1;
   end
 
   `JAL_OP:
   begin
     op = `JAL;
-    imm = {{20{inst[31]}}, inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
+    imm = {{11{inst[31]}}, inst[31], inst[19:12], inst[20], inst[30:21], 1'b0};
     use_imm = 1;
   end
 

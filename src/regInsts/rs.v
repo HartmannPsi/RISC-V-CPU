@@ -1,4 +1,5 @@
 `include "src/macros.v"
+//`include "src/regInsts/alu.v"
 
 module ReservationStation(
   input wire clk_in,
@@ -54,40 +55,44 @@ reg [109:0] rs_buffer[2:0]; // {addr, vj, vk, qj, qk, op, busy}
 reg [2:0] i;
 
 function [2:0] getFreeBuf;
+  input m;
+
   begin
-    for (i = 0; i < 3; i = i + 1) begin
-      if (!rs_buffer[i][0]) begin
+    getFreeBuf = 3'b111;
+    for (i = 0; i < 3; i = i + 1) begin : func_loop_1
+      if (!rs_buffer[i[1:0]][0]) begin
         getFreeBuf = i;
-        return;
+        disable func_loop_1;
       end
     end
-    getFreeBuf = 3'b111;
   end
 endfunction
 
 function [2:0] getReadyBuf;
+  input m;
+
   begin
-    for (i = 0; i < 3; i = i + 1) begin
-      if (rs_buffer[i][0] && rs_buffer[i][13:10] == `None &&
-                rs_buffer[i][9:6] == `None) begin // busy && qj == None && qk == None
+    getReadyBuf = 3'b111;
+    for (i = 0; i < 3; i = i + 1) begin : func_loop_2
+      if (rs_buffer[i[1:0]][0] && rs_buffer[i[1:0]][13:10] == `None &&
+                rs_buffer[i[1:0]][9:6] == `None) begin // busy && qj == None && qk == None
         getReadyBuf = i;
-        return;
+        disable func_loop_2;
       end
     end
-    getReadyBuf = 3'b111;
   end
 endfunction
 
 function [3:0] getTag;
-  input [2:0] i;
+  input [2:0] id;
   begin
-    if (i == 0) begin
+    if (id == 0) begin
       getTag = `Add1;
     end
-    else if (i == 1) begin
+    else if (id == 1) begin
       getTag = `Add2;
     end
-    else if (i == 2) begin 
+    else if (id == 2) begin 
       getTag = `Add3;
     end
     else begin // exception
@@ -102,7 +107,7 @@ wire inst_receive = inst_valid && op != `NONE && op != `LB && op != `LBU &&
 wire buffer_full = rs_buffer[2][0] && rs_buffer[1][0] && rs_buffer[0][0];
 assign launch_fail = inst_receive && buffer_full;
 
-wire [2:0] free_idx = buffer_full ? 3'b111 : (inst_receive ? getFreeBuf() : 3'b111);
+wire [2:0] free_idx = buffer_full ? 3'b111 : (inst_receive ? getFreeBuf(1'b0) : 3'b111);
 wire [3:0] actual_qj = (op == `JAL || op == `AUIPC || op == `LUI) ? `None : qj;
 wire [31:0] actual_vk = use_imm ? imm : vk;
 wire [3:0] actual_qk = use_imm ? `None : qk;
@@ -113,13 +118,13 @@ assign rs2_idx = rs2;
 assign rd_idx = branch_in ? 5'b0 : rd;
 assign inst_valid_out = inst_receive;
 
-wire [2:0] ready_idx = getReadyBuf();
+wire [2:0] ready_idx = getReadyBuf(1'b0);
 assign submit_valid = ready_idx != 3'b111;
 assign submit_tag = submit_valid ? getTag(ready_idx) : `None;
-wire [31:0] compute_addr = submit_valid ? rs_buffer[ready_idx][109:78] : 32'b0;
-wire [31:0] op1 = submit_valid ? rs_buffer[ready_idx][77:46] : 32'b0;
-wire [31:0] op2 = submit_valid ? rs_buffer[ready_idx][45:14] : 32'b0;
-wire [4:0] alu_op = submit_valid ? rs_buffer[ready_idx][5:1] : 5'b0;
+wire [31:0] compute_addr = submit_valid ? rs_buffer[ready_idx[1:0]][109:78] : 32'b0;
+wire [31:0] op1 = submit_valid ? rs_buffer[ready_idx[1:0]][77:46] : 32'b0;
+wire [31:0] op2 = submit_valid ? rs_buffer[ready_idx[1:0]][45:14] : 32'b0;
+wire [4:0] alu_op = submit_valid ? rs_buffer[ready_idx[1:0]][5:1] : 5'b0;
 
 ALU alu(
   .op1(op1),
@@ -138,9 +143,9 @@ ALU alu(
 always @(posedge clk_in) begin
   if (rst_in) begin
     for (i = 0; i < 3; i = i + 1) begin
-      rs_buffer[i] <= 110'b0;
+      rs_buffer[i[1:0]] <= 110'b0;
     end
-    i <= 0;
+    //i <= 0;
   end
   else if (!rdy_in) begin
     // pause
@@ -149,36 +154,36 @@ always @(posedge clk_in) begin
 
     if (submit_valid) begin // inner update
       for (i = 0; i < 3; i = i + 1) begin
-        if (rs_buffer[i][0] && rs_buffer[i][13:10] == submit_tag) begin // qj == submit_tag
-          rs_buffer[i][13:10] <= `None; // qj <= None
-          rs_buffer[i][77:46] <= submit_val; // vj <= submit_val
+        if (rs_buffer[i[1:0]][0] && rs_buffer[i[1:0]][13:10] == submit_tag) begin // qj == submit_tag
+          rs_buffer[i[1:0]][13:10] <= `None; // qj <= None
+          rs_buffer[i[1:0]][77:46] <= submit_val; // vj <= submit_val
         end
-        if (rs_buffer[i][0] && rs_buffer[i][9:6] == submit_tag) begin // qk == submit_tag
-          rs_buffer[i][9:6] <= `None; // qk <= None
-          rs_buffer[i][45:14] <= submit_val; // vk <= submit_val
+        if (rs_buffer[i[1:0]][0] && rs_buffer[i[1:0]][9:6] == submit_tag) begin // qk == submit_tag
+          rs_buffer[i[1:0]][9:6] <= `None; // qk <= None
+          rs_buffer[i[1:0]][45:14] <= submit_val; // vk <= submit_val
         end
       end
     end
 
     if (cdb_active) begin // update
       for (i = 0; i < 3; i = i + 1) begin
-        if (rs_buffer[i][0] && rs_buffer[i][13:10] == cdb_tag) begin // qj == cdb_tag
-          rs_buffer[i][13:10] <= `None; // qj <= None
-          rs_buffer[i][77:46] <= cdb_val; // vj <= cdb_val
+        if (rs_buffer[i[1:0]][0] && rs_buffer[i[1:0]][13:10] == cdb_tag) begin // qj == cdb_tag
+          rs_buffer[i[1:0]][13:10] <= `None; // qj <= None
+          rs_buffer[i[1:0]][77:46] <= cdb_val; // vj <= cdb_val
         end
-        if (rs_buffer[i][0] && rs_buffer[i][9:6] == cdb_tag) begin // qk == cdb_tag
-          rs_buffer[i][9:6] <= `None; // qk <= None
-          rs_buffer[i][45:14] <= cdb_val; // vk <= cdb_val
+        if (rs_buffer[i[1:0]][0] && rs_buffer[i[1:0]][9:6] == cdb_tag) begin // qk == cdb_tag
+          rs_buffer[i[1:0]][9:6] <= `None; // qk <= None
+          rs_buffer[i[1:0]][45:14] <= cdb_val; // vk <= cdb_val
         end
       end
     end
 
     if (free_idx != 3'b111) begin // push
-      rs_buffer[free_idx] <= {addr, vj, actual_vk, actual_qj, actual_qk, op, 1'b1};
+      rs_buffer[free_idx[1:0]] <= {addr, vj, actual_vk, actual_qj, actual_qk, op, 1'b1};
     end
 
     if (ready_idx != 3'b111) begin // pop
-      rs_buffer[ready_idx] <= 110'b0;
+      rs_buffer[ready_idx[1:0]] <= 110'b0;
     end
   end
 end

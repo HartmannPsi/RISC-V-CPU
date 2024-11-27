@@ -50,7 +50,8 @@ module FpOpQueue(
 );
 
 reg [87:0] op_queue[`FOQ_SIZE - 1:0];
-reg [`FOQ_SIZE_W - 1:0] front, rear, i;
+reg [`FOQ_SIZE_W - 1:0] front, rear;
+integer i;
 
 assign inst_out_valid = !(front == rear); // nonempty
 assign foq_full = (front == rear + 1) || (front == 0 && rear == `FOQ_SIZE - 1); // full
@@ -59,7 +60,7 @@ assign {op_out, rd_out, rs1_out, rs2_out, imm_out,
           branch_out, ls_out, use_imm_out,
           jalr_out, addr_out} = inst_out_valid ? op_queue[front] : 88'b0; // output if nonempty
 
-wire inst_total_in = {op_in, rd_in, rs1_in,
+wire [87:0] inst_total_in = {op_in, rd_in, rs1_in,
           rs2_in, imm_in, branch_in, ls_in,
           use_imm_in, jalr_in, addr_in};
 
@@ -70,7 +71,7 @@ always @(posedge clk_in) begin
     end
     front <= 0;
     rear <= 0;
-    i <= 0;
+    //i <= 0;
   end
   else if (!rdy_in) begin
     // pause

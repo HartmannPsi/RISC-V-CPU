@@ -10,12 +10,12 @@ module ALU(
   input wire[31:0] addr,
   input wire[4:0] alu_op,
 
-  output wire[31:0] result,
-  output wire zero,         // 1 if result is zero
-  output wire c_out,        // carry out
-  output wire overflow,     // 1 if overflow occurs
-  output wire jalr_done,
-  output wire [31:0] jalr_addr
+  output reg [31:0] result,
+  output reg zero,         // 1 if result is zero
+  output reg c_out,        // carry out
+  output reg overflow,     // 1 if overflow occurs
+  output reg jalr_done,
+  output reg [31:0] jalr_addr
 );
 
 always @(*) begin
@@ -70,7 +70,7 @@ always @(*) begin
 
     `SLL: // sll
     begin
-      {c_out, result} = op1 << op2;
+      {c_out, result} = {1'b0, op1} << op2;
       overflow = 0;
       zero = (result == 0);
     end
@@ -100,7 +100,7 @@ always @(*) begin
         result = 1;
       end
       else begin
-        result = (op1 < op2);
+        result = {31'b0, (op1 < op2)};
       end
       overflow = 0;
       zero = ~result[0];
@@ -109,7 +109,7 @@ always @(*) begin
 
     `SLTU: // sltu
     begin
-      result = (op1 < op2);
+      result = {31'b0, (op1 < op2)};
       overflow = 0;
       zero = ~result[0];
       c_out = result[0];

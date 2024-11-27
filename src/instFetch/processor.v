@@ -1,4 +1,5 @@
 `include "src/macros.v"
+//`include "src/instFetch/decoder.v"
 
 module InstProcessor(
   input wire clk_in,
@@ -81,7 +82,7 @@ always @(posedge clk_in) begin
         // pause
         cease <= 1'b1;
       end
-      else if (cease && !jalr_done) begin // pause fetching util jalr is done
+      else if (cease && !jalr_compute) begin // pause fetching util jalr is done
         // pause
       end
       else if (foq_full) begin // pause fetching util foq is not full

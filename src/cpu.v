@@ -39,7 +39,7 @@ wire [31:0] mem_addr_ram_ctrl;
 wire [7:0] din_mem_ctrl;
 wire [7:0] dout_mem_ctrl;
 
-wire st_val_lsb;
+wire [31:0] st_val_lsb;
 wire [31:0] ls_addr_lsb;
 wire r_nw_lsb;
 wire [2:0] type_lsb;
@@ -51,7 +51,7 @@ ram memory(
   .clk_in(clk_in),
   .en_in(rdy_in),
   .r_nw_in(r_nw_ram_ctrl),
-  .a_in(mem_addr_ram_ctrl[ADDR_WIDTH-1:0]),
+  .a_in(mem_addr_ram_ctrl[17-1:0]),
   .d_in(din_mem_ctrl),
   .d_out(dout_mem_ctrl)
 );
@@ -179,7 +179,7 @@ wire branch_foq;
 wire ls_foq;
 wire use_imm_foq;
 wire jalr_foq;
-wire addr_foq;
+wire [31:0] addr_foq;
 wire inst_valid_foq;
 wire launch_fail_lsb;
 wire launch_fail_rs;
@@ -192,14 +192,14 @@ FpOpQueue foq(
   .inst_in_valid(decode_valid_prcs),
 
   .op_in(op_push),
-  .rd_in(rd),
-  .rs1_in(rs1),
-  .rs2_in(rs2),
-  .imm_in(imm),
-  .branch_in(branch_op),
-  .ls_in(ls_op),
-  .use_imm_in(use_imm_op),
-  .jalr_in(jalr_op),
+  .rd_in(rd_push),
+  .rs1_in(rs1_push),
+  .rs2_in(rs2_push),
+  .imm_in(imm_push),
+  .branch_in(branch_op_push),
+  .ls_in(ls_op_push),
+  .use_imm_in(use_imm_op_push),
+  .jalr_in(jalr_op_push),
 
   .addr_in(addr_icache_prcs),
 
