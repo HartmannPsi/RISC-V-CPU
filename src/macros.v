@@ -29,15 +29,15 @@
 `define JALR  5'b11111
 `define NONE  5'b00000
 
-`define BIN_OP   7'b011'0011
-`define IMM_OP   7'b001'0011
-`define LD_OP    7'b000'0011
-`define ST_OP    7'b010'0011
-`define BR_OP    7'b110'0011
-`define JAL_OP   7'b110'1111
-`define JALR_OP  7'b110'0111
-`define AUIPC_OP 7'b001'0111
-`define LUI_OP   7'b011'0111
+`define BIN_OP   7'b011_0011
+`define IMM_OP   7'b001_0011
+`define LD_OP    7'b000_0011
+`define ST_OP    7'b010_0011
+`define BR_OP    7'b110_0011
+`define JAL_OP   7'b110_1111
+`define JALR_OP  7'b110_0111
+`define AUIPC_OP 7'b001_0111
+`define LUI_OP   7'b011_0111
 
 `define None 4'b0000
 `define Add1 4'b0001
