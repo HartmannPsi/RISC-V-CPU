@@ -190,7 +190,7 @@ always @(*) begin
   else begin // 16-bit
     // TODO: c.addi，c.jal，c.li，c.addi16sp，c.lui，c.srli，c.srai，c.andi，c.sub，c.xor，c.or，c.and，
     // c.j，c.beqz，c.bnez，c.addi4spn，c.lw，c.sw，c.slli，c.jr，c.mv，c.jalr，c.add，c.lwsp，c.swsp
-    if (inst[15:13] == 3'b000 && inst[1:0] == 2'b01 && {inst[12], inst[6:2]} != 0 && inst[11-7] != 0) begin // c.addi
+    if (inst[15:13] == 3'b000 && inst[1:0] == 2'b01 && {inst[12], inst[6:2]} != 0 && inst[11:7] != 0) begin // c.addi
       op = `ADD;
       branch = 0;
       ls = 0;
@@ -246,7 +246,7 @@ always @(*) begin
       rd = inst[11:7];
       rs1 = 0;
       rs2 = 0;
-      imm = {{14{inst[12]}}, inst[12], inst[6:2], 12'b0};
+      imm = {14'b0, inst[12], inst[6:2], 12'b0};
       jalr = 0;
     end
 
