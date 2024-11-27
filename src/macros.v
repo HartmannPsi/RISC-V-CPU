@@ -60,7 +60,7 @@
 `define FOQ_SIZE_W 4
 `define FOQ_SIZE (1 << `FOQ_SIZE_W)
 
-`define ICACHE_ADDR_W 5
+`define ICACHE_ADDR_W 6
 `define ICACHE_SIZE (1 << `ICACHE_ADDR_W)
 
 `define ROB_SIZE_W 4

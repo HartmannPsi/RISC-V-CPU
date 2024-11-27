@@ -60,7 +60,7 @@ wire [31:0] addr_ctrl_icache;
 wire available_ctrl;
 wire [31:0] data_in_ctrl_icache = 32'b0;
 wire r_nw_ctrl_icache = 1'b1;
-wire [2:0] type_ctrl_icache = 3'b000;
+wire [2:0] type_ctrl_icache = 3'b001; // LHW
 // fixed in icache: read only, LW mode
 wire [31:0] data_out_ctrl;
 wire icache_hit;
@@ -102,6 +102,7 @@ MemController mem_ctrl(
 
 wire [31:0] addr_icache_prcs;
 wire [31:0] data_icache_prcs;
+wire inst_length_icache;
 
 InstCache icache(
   .clk_in(clk_in),
@@ -110,6 +111,7 @@ InstCache icache(
 
   .addr_in(addr_icache_prcs),
   .data_out(data_icache_prcs),
+  .inst_length(inst_length_icache),
 
   .rewrite_data(data_out_ctrl),
   .addr_out(addr_ctrl_icache),
@@ -144,6 +146,7 @@ InstProcessor processor(
 
   .inst_available(icache_hit),
   .inst(data_icache_prcs),
+  .inst_length(inst_length_icache),
   .fetch_addr(addr_icache_prcs),
 
   .branch(branch_bp),
@@ -231,6 +234,7 @@ BranchPredictor bp(
 
   .branch(branch_op_push),
   .imm(imm_push),
+  .inst_length(inst_length_icache),
   .pc_in(addr_icache_prcs),
 
   .cdb_val(cdb_val),

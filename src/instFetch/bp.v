@@ -8,6 +8,7 @@ module BranchPredictor(
   // decoded inst from decoder
   input wire branch,
   input wire [31:0] imm,
+  input wire inst_length,
 
   // now pc
   input wire [31:0] pc_in,
@@ -35,6 +36,8 @@ reg [32:0] bp_fsm[0:`BP_SIZE-1]; // [32]: used [31:2] :src_addr, [1:0]: 00: SNT,
 reg [`BP_SIZE_W - 1:0] front, rear;
 integer i;
 
+wire [31:0] nxt_offset = inst_length ? 4 : 2;
+
 function [`BP_SIZE_W - 1:0] distribute; // get the idx of fsm
   input [31:0] src_addr;
 
@@ -53,8 +56,8 @@ endfunction
 
 wire need_predict = branch && rdy_in;
 assign need_branch = need_predict ? bp_fsm[distribute(pc_in)][1:0] > 2'b01 : 1'b0;
-assign branch_addr = need_branch ? pc_in + imm : 32'b0;
-wire [31:0] fail_addr_in = need_predict ? (need_branch ? pc_in + 4 : pc_in + imm) : 32'b0;
+assign branch_addr = need_predict ? (need_branch ? pc_in + imm : pc_in + nxt_offset) : 32'b0;
+wire [31:0] fail_addr_in = need_predict ? (need_branch ? pc_in + nxt_offset : pc_in + imm) : 32'b0;
 
 wire [31:0] head_src_addr = bp_queue[front][64:33], head_fail_addr = bp_queue[front][32:1];
 wire head_br = bp_queue[front][0];

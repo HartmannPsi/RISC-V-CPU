@@ -10,6 +10,8 @@ module InstProcessor(
   input wire inst_available,
   // inst from icache
   input wire [31:0] inst,
+  // inst length from icache, 1 for 32-bit, 0 for 16-bit
+  input wire inst_length,
   // pc to icache
   output wire [31:0] fetch_addr,
 
@@ -52,11 +54,15 @@ module InstProcessor(
 reg [31:0] pc;
 reg cease;
 
+//integer nxt_offset;
+wire [31:0] nxt_offset = inst_length ? 4 : 2;
+
 assign fetch_addr = pc;
 assign decode_valid = cease ? 1'b0 : inst_available;
 
 InstDecoder decoder(
   .inst(inst),
+  .inst_length(inst_length),
   .op(op),
   .branch(branch_out),
   .ls(ls),
@@ -99,7 +105,7 @@ always @(posedge clk_in) begin
           pc <= pc + imm;
         end
         else begin // normal pc increment
-          pc <= pc + 4;
+          pc <= pc + nxt_offset;
         end
       end
 
