@@ -74,6 +74,205 @@ InstDecoder decoder(
   .jalr(jalr)
 );
 
+task printInst;
+begin
+
+  $display("pc=%h; inst=%h", fetch_addr, inst);
+
+  case (op)
+  `LB:
+  begin
+    $display("LB x%d %d(x%d)", rd, imm, rs1);
+  end
+
+  `LBU:
+  begin
+    $display("LBU x%d %d(x%d)", rd, imm, rs1);
+  end
+
+  `LH:
+  begin
+    $display("LH x%d %d(x%d)", rd, imm, rs1);
+  end
+
+  `LHU:
+  begin
+    $display("LHU x%d %d(x%d)", rd, imm, rs1);
+  end
+
+  `LW:
+  begin
+    $display("LW x%d %d(x%d)", rd, imm, rs1);
+  end
+
+  `SB:
+  begin
+    $display("SB x%d %d(x%d)", rs2, imm, rs1);
+  end
+
+  `SH:
+  begin
+    $display("SH x%d %d(x%d)", rs2, imm, rs1);
+  end
+
+  `SW:
+  begin
+    $display("SW x%d %d(x%d)", rs2, imm, rs1);
+  end
+
+  `BEQ:
+  begin
+    $display("BEQ x%d x%d offset=%d", rs1, rs2, imm);
+  end
+
+  `BGE:
+  begin
+    $display("BGE x%d x%d offset=%d", rs1, rs2, imm);
+  end
+
+  `BGEU:
+  begin
+    $display("BGEU x%d x%d offset=%d", rs1, rs2, imm);
+  end
+
+  `BLT:
+  begin
+    $display("BLT x%d x%d offset=%d", rs1, rs2, imm);
+  end
+
+  `BLTU:
+  begin
+    $display("BLTU x%d x%d offset=%d", rs1, rs2, imm);
+  end
+
+  `BNE:
+  begin
+    $display("BNE x%d x%d offset=%d", rs1, rs2, imm);
+  end
+
+  `JAL:
+  begin
+    $display("JAL x%d offset=%d", rd, imm);
+  end
+
+  `JALR:
+  begin
+    $display("JALR x%d x%d %d", rd, rs1, imm);
+  end
+
+  `AUIPC:
+  begin
+    $display("AUIPC x%d %d", rd, imm);
+  end
+
+  `ADD:
+  begin
+    if (use_imm) begin // addi
+      $display("ADDI x%d x%d %d", rd, rs1, imm);
+    end
+    else begin // add
+      $display("ADD x%d x%d x%d", rd, rs1, rs2);
+    end
+  end
+
+  `SUB:
+  begin
+    $display("SUB x%d x%d x%d", rd, rs1, rs2);
+  end
+
+  `AND:
+  begin
+    if (use_imm) begin // andi
+      $display("ANDI x%d x%d %d", rd, rs1, imm);
+    end
+    else begin // and
+      $display("AND x%d x%d x%d", rd, rs1, rs2);
+    end
+  end
+
+  `OR:
+  begin
+    if (use_imm) begin // ori
+      $display("ORI x%d x%d %d", rd, rs1, imm);
+    end
+    else begin // or
+      $display("OR x%d x%d x%d", rd, rs1, rs2);
+    end
+  end
+
+  `XOR:
+  begin
+    if (use_imm) begin // xori
+      $display("XORI x%d x%d %d", rd, rs1, imm);
+    end
+    else begin // xor
+      $display("XOR x%d x%d x%d", rd, rs1, rs2);
+    end
+  end
+
+  `SLL:
+  begin
+    if (use_imm) begin // slli
+      $display("SLLI x%d x%d %d", rd, rs1, imm);
+    end
+    else begin // sll
+      $display("SLL x%d x%d x%d", rd, rs1, rs2);
+    end
+  end
+
+  `SRL:
+  begin
+    if (use_imm) begin // srli
+      $display("SRLI x%d x%d %d", rd, rs1, imm);
+    end
+    else begin // srl
+      $display("SRL x%d x%d x%d", rd, rs1, rs2);
+    end
+  end
+
+  `SRA:
+  begin
+    if (use_imm) begin // srai
+      $display("SRAI x%d x%d %d", rd, rs1, imm);
+    end
+    else begin // sra
+      $display("SRA x%d x%d x%d", rd, rs1, rs2);
+    end
+  end
+
+  `SLT:
+  begin
+    if (use_imm) begin // slti
+      $display("SLTI x%d x%d %d", rd, rs1, imm);
+    end
+    else begin // slt
+      $display("SLT x%d x%d x%d", rd, rs1, rs2);
+    end
+  end
+
+  `SLTU:
+  begin
+    if (use_imm) begin // sltiu
+      $display("SLTIU x%d x%d %d", rd, rs1, imm);
+    end
+    else begin // sltu
+      $display("SLTU x%d x%d x%d", rd, rs1, rs2);
+    end
+  end
+
+  `LUI:
+  begin
+    $display("LUI x%d %d", rd, imm);
+  end
+
+  default:
+  begin
+    $display("Invalid Inst!");
+  end
+  endcase
+end
+endtask
+
 always @(posedge clk_in) begin
   if (rst_in) begin
     pc <= 32'b0;
@@ -82,7 +281,7 @@ always @(posedge clk_in) begin
     // pause
   end
   else begin
-
+    printInst();
     if (inst_available) begin // inst is valid
       if (jalr) begin // pause fetching util jalr is done
         // pause
@@ -108,11 +307,11 @@ always @(posedge clk_in) begin
           pc <= pc + nxt_offset;
         end
       end
+    end
 
-      if (jalr_compute) begin // reset cease
-        cease <= 1'b0;
-        pc <= jalr_addr;
-      end
+    if (jalr_compute) begin // reset cease
+      cease <= 1'b0;
+      pc <= jalr_addr;
     end
 
   end

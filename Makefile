@@ -24,7 +24,9 @@ all: testcases build_sim
 endif
 
 testcases:
-	@make -C $(TESTCASE_DIR)
+ 	cd $(TESTCASE_DIR) && docker run -it --rm -v .:/app -w /app riscv-toolchain  make
+	# @make -C $(TESTCASE_DIR)
+	
 
 _no_testcase_name_check:
 ifndef name
@@ -70,4 +72,4 @@ run_fpga: build_fpga_test
 clean:
 	rm -f $(TESTSPACE_DIR)/test*
 
-.PHONY: all build_sim build_sim_test run_sim clean
+.PHONY: all build_sim build_sim_test run_sim clean testcases
