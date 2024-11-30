@@ -55,13 +55,14 @@ reg [109:0] rs_buffer[2:0]; // {addr, vj, vk, qj, qk, op, busy}
 reg [2:0] i;
 
 function [2:0] getFreeBuf;
-  input m;
+  input [109:0] rs_buffer[2:0];
 
   begin
+    integer i;
     getFreeBuf = 3'b111;
     for (i = 0; i < 3; i = i + 1) begin : func_loop_1
       if (!rs_buffer[i[1:0]][0]) begin
-        getFreeBuf = i;
+        getFreeBuf = i[2:0];
         disable func_loop_1;
       end
     end
@@ -69,7 +70,7 @@ function [2:0] getFreeBuf;
 endfunction
 
 function [2:0] getReadyBuf;
-  input m;
+  input [109:0] rs_buffer[2:0];
 
   begin
     getReadyBuf = 3'b111;
@@ -107,7 +108,7 @@ wire inst_receive = inst_valid && op != `NONE && op != `LB && op != `LBU &&
 wire buffer_full = rs_buffer[2][0] && rs_buffer[1][0] && rs_buffer[0][0];
 assign launch_fail = inst_receive && buffer_full;
 
-wire [2:0] free_idx = buffer_full ? 3'b111 : (inst_receive ? getFreeBuf(1'b0) : 3'b111);
+wire [2:0] free_idx = buffer_full ? 3'b111 : (inst_receive ? getFreeBuf(rs_buffer) : 3'b111);
 wire [3:0] actual_qj = (op == `JAL || op == `AUIPC || op == `LUI) ? `None : qj;
 wire [31:0] actual_vk = use_imm ? imm : vk;
 wire [3:0] actual_qk = use_imm ? `None : qk;
@@ -118,7 +119,7 @@ assign rs2_idx = rs2;
 assign rd_idx = branch_in ? 5'b0 : rd;
 assign inst_valid_out = inst_receive;
 
-wire [2:0] ready_idx = getReadyBuf(1'b0);
+wire [2:0] ready_idx = getReadyBuf(rs_buffer);
 assign submit_valid = ready_idx != 3'b111;
 assign submit_tag = submit_valid ? getTag(ready_idx) : `None;
 wire [31:0] compute_addr = submit_valid ? rs_buffer[ready_idx[1:0]][109:78] : 32'b0;

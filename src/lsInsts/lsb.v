@@ -66,7 +66,8 @@ wire empty = front == rear;
 wire full = front == rear + 1 || (front == 0 && rear == 9);
 
 function [3:0] getFreeBuf;
-  input m;
+  input full;
+  input [3:0] rear;
   // begin
   //   for (i = 0; i < 10; i = i + 1) begin
   //     if (!ls_buffer[i][0]) begin
@@ -76,16 +77,19 @@ function [3:0] getFreeBuf;
   //   end
   //   getFreeBuf = 4'b1111;
   // end
-  if (full) begin
-    getFreeBuf = 4'b1111;
-  end
-  else begin
-    getFreeBuf = rear;
+  begin
+    if (full) begin
+      getFreeBuf = 4'b1111;
+    end
+    else begin
+      getFreeBuf = rear;
+    end
   end
 endfunction
 
 function [3:0] getReadyBuf;
-  input m;
+  input empty;
+  input [3:0] front;
   // begin
   //   for (i = 0; i < 10; i = i + 1) begin
   //     if (ls_buffer[i][0] && ls_buffer[i][13:10] == `None &&
@@ -96,11 +100,13 @@ function [3:0] getReadyBuf;
   //   end
   //   getReadyBuf = 4'b1111;
   // end
-  if (empty) begin
-    getReadyBuf = 4'b1111;
-  end
-  else begin
-    getReadyBuf = front;
+  begin
+    if (empty) begin
+      getReadyBuf = 4'b1111;
+    end
+    else begin
+      getReadyBuf = front;
+    end
   end
 endfunction
 
@@ -178,7 +184,7 @@ wire inst_receive = inst_valid && (input_ld_inst || input_st_inst); // ls insts
 wire buffer_full = full;
 assign launch_fail = inst_receive && buffer_full;
 
-wire [3:0] free_idx = buffer_full ? 4'b1111 : (inst_receive ? getFreeBuf(1'b0) : 4'b1111);
+wire [3:0] free_idx = buffer_full ? 4'b1111 : (inst_receive ? getFreeBuf(full, rear) : 4'b1111);
 
 wire [3:0] actual_qk = input_ld_inst ? `None : qk;
 
@@ -188,7 +194,7 @@ assign rs2_idx = rs2;
 assign rd_idx = input_ld_inst ? rd : 5'b0;
 assign inst_valid_out = inst_receive;
 
-wire [3:0] ready_idx = getReadyBuf(1'b0);
+wire [3:0] ready_idx = getReadyBuf(empty, front);
 
 wire ready_ld_inst = ready_idx == 4'b1111 ? 1'b0 : (ls_buffer[ready_idx][5:1] == `LB || ls_buffer[ready_idx][5:1] == `LBU ||
                                                       ls_buffer[ready_idx][5:1] == `LH || ls_buffer[ready_idx][5:1] == `LHU ||

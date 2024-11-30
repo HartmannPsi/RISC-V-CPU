@@ -47,7 +47,9 @@ wire cache_hit2 = inst_length ? (busy[idx2] && (tags[idx2] == tag2)) : 1'b1;
 assign cache_hit = cache_hit1 && cache_hit2;
 
 function [31:0] getInst;
-  input m;
+  input cache_hit, inst_length;
+  input [`ICACHE_ADDR_W - 1:0] idx1, idx2;
+  input [15:0] cache[`ICACHE_SIZE - 1:0];
   begin
     if (cache_hit) begin
       if (inst_length) begin // 32-bit
@@ -64,10 +66,12 @@ function [31:0] getInst;
 endfunction
 
 // assign data_out = {16'b0, cache_hit ? cache[idx1] : 16'b0};
-assign data_out = getInst(1'b0);
+assign data_out = getInst(cache_hit, inst_length, idx1, idx2, cache);
 
 function [31:0] getAddr;
-  input m;
+  //input m;
+  input cache_hit1, cache_hit2, inst_length;
+  input [31:0] addr_in, addr2;
   begin
     if (cache_hit1) begin
       if (inst_length && !cache_hit2) begin // read part2
@@ -80,11 +84,13 @@ function [31:0] getAddr;
     else begin // read part1
       getAddr = addr_in;
     end
+
+    // getAddr = addr2;
   end
 endfunction
 
 // assign addr_out = cache_hit ? 32'b0 : addr_in;
-assign addr_out = getAddr(1'b0);
+assign addr_out = getAddr(cache_hit1, cache_hit2, inst_length, addr_in, addr2);
 wire [31 - 1 - `ICACHE_ADDR_W:0] tag_rewrite = addr_out[31:1 + `ICACHE_ADDR_W];
 wire [`ICACHE_ADDR_W - 1:0] idx_rewrite = addr_out[`ICACHE_ADDR_W:1];
 
