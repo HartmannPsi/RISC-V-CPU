@@ -126,6 +126,13 @@ always @(posedge clk_in) begin
       end
 
       if (cdb_active) begin // pop
+        rob_queue[front] <= 69'b0;
+        if (front == `ROB_SIZE - 1) begin
+          front <= 0;
+        end
+        else begin
+          front <= front + 1;
+        end
       end
     end
 

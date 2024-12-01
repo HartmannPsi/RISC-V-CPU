@@ -280,6 +280,7 @@ endtask
 always @(posedge clk_in) begin
   if (rst_in) begin
     pc <= 32'b0;
+    cease <= 1'b0;
   end
   else if (!rdy_in) begin
     // pause
