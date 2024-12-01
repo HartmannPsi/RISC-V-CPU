@@ -48,15 +48,15 @@ assign cache_hit = cache_hit1 && cache_hit2;
 
 function [31:0] getInst;
   input cache_hit, inst_length;
-  input [`ICACHE_ADDR_W - 1:0] idx1, idx2;
-  input [15:0] cache[`ICACHE_SIZE - 1:0];
+  // input [`ICACHE_ADDR_W - 1:0] idx1, idx2;
+  input [15:0] cache_idx1, cache_idx2;
   begin
     if (cache_hit) begin
       if (inst_length) begin // 32-bit
-        getInst = {cache[idx2], cache[idx1]};
+        getInst = {cache_idx2, cache_idx1};
       end
       else begin // 16-bit
-        getInst = {16'b0, cache[idx1]};
+        getInst = {16'b0, cache_idx1};
       end
     end
     else begin
@@ -66,7 +66,7 @@ function [31:0] getInst;
 endfunction
 
 // assign data_out = {16'b0, cache_hit ? cache[idx1] : 16'b0};
-assign data_out = getInst(cache_hit, inst_length, idx1, idx2, cache);
+assign data_out = getInst(cache_hit, inst_length, cache[idx1], cache[idx2]);
 
 function [31:0] getAddr;
   //input m;

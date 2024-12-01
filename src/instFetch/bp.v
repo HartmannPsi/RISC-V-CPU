@@ -31,8 +31,8 @@ module BranchPredictor(
   output wire [31:0] branch_addr
 );
 
-reg [64:0] bp_queue [0:`BP_SIZE-1]; // {src_addr, fail_addr, br}
-reg [32:0] bp_fsm[0:`BP_SIZE-1]; // [32]: used [31:2] :src_addr, [1:0]: 00: SNT, 01: WNT, 10: WT, 11: ST
+reg [64:0] bp_queue[0:`BP_SIZE - 1]; // {src_addr, fail_addr, br}
+reg [32:0] bp_fsm[0:`BP_SIZE - 1]; // [32]: used [31:2] :src_addr, [1:0]: 00: SNT, 01: WNT, 10: WT, 11: ST
 reg [`BP_SIZE_W - 1:0] front, rear;
 integer i;
 
@@ -40,7 +40,7 @@ wire [31:0] nxt_offset = inst_length ? 4 : 2;
 
 function [`BP_SIZE_W - 1:0] distribute; // get the idx of fsm
   input [31:0] src_addr;
-  input [32:0] bp_fsm[0:`BP_SIZE-1];
+  input [32:0] bp_fsm[0:`BP_SIZE - 1];
 
   begin
     integer i;
