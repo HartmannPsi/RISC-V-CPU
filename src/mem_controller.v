@@ -91,16 +91,55 @@ assign mem_write = memWrite(state, r_nw, data, called, data_in[7:0]);
 
 // assign mem_write = r_nw_out ? 8'b0 : ((called && state == 2'b0) ? data_in[7:0] : data[7 + state * 8 : state * 8]);
 
-// 000: LW, 001: LH, 010: LB, 101: LHU, 110: LBU
-assign data_out = type_[2] ?
-                            (type_[1:0] == 2'b01 ?
-                                                  {16'b0, mem_read, data[7:0]} :                                 // LHU
-                                                  {24'b0, mem_read}) :                                           // LBU
-                            (type_[1:0] == 2'b00 ?
-                                                  {mem_read, data[23:0]} :                                       // LW
-                                                  (type_[1:0] == 2'b01 ?
-                                                                        {{16{mem_read[7]}}, mem_read, data[7:0]} : // LH
-                                                                        {{24{mem_read[7]}}, mem_read}));           // LB
+// 000: LW, 001: LHU, 010: LBU, 101: LH, 110: LB
+// assign data_out = type_[2] ?
+//                             (type_[1:0] == 2'b01 ?
+//                                                   {16'b0, mem_read, data[7:0]} :                                 // LHU
+//                                                   {24'b0, mem_read}) :                                           // LBU
+//                             (type_[1:0] == 2'b00 ?
+//                                                   {mem_read, data[23:0]} :                                       // LW
+//                                                   (type_[1:0] == 2'b01 ?
+//                                                                         {{16{mem_read[7]}}, mem_read, data[7:0]} : // LH
+//                                                                         {{24{mem_read[7]}}, mem_read}));           // LB
+
+function [31:0] getDataOut;
+input [2:0] type_arg;
+input [7:0] mem_read;
+input [31:0] data;
+
+begin
+  case (type_arg)
+  3'b000: // LW
+  begin
+    getDataOut = {mem_read, data[23:0]};
+  end
+  3'b001: // LHU
+  begin
+    getDataOut = {16'b0, mem_read, data[7:0]};
+  end
+  3'b010: // LBU
+  begin
+    getDataOut = {24'b0, mem_read};
+  end
+  3'b101: // LH
+  begin
+    getDataOut = {{16{mem_read[7]}}, mem_read, data[7:0]};
+  end
+  3'b110: // LB
+  begin
+    getDataOut = {{24{mem_read[7]}}, mem_read};
+  end
+  default: // exception
+  begin
+    // $display("Error: invalid ls type: %d", type_arg);
+    // $finish;
+    getDataOut = 32'b0;
+  end
+  endcase
+end
+endfunction
+
+assign data_out = getDataOut(type_, mem_read, data);
 
 always @(posedge clk_in) begin
   if (rst_in) begin
@@ -120,6 +159,7 @@ always @(posedge clk_in) begin
     if (data_available) begin
       data_available <= 1'b0;
       block <= 1'b0;
+      type_ <= 3'b0;
     end
     else begin
       case (state)
@@ -134,6 +174,7 @@ always @(posedge clk_in) begin
           if (type_in[1:0] == 2'b10) begin // byte operation
             state <= 2'b00;
             data_available <= 1'b1;
+            type_ <= type_in;
           end
           else begin // word or half-word operation
             state <= 2'b01;
@@ -156,7 +197,7 @@ always @(posedge clk_in) begin
         if (type_[1:0] == 2'b01) begin // half-word opertion
           addr <= 32'b0;
           r_nw <= 1'b0;
-          type_ <= 3'b0;
+          //type_ <= 3'b0;
           data_available <= 1'b1;
           state <= 2'b00;
         end
@@ -183,7 +224,7 @@ always @(posedge clk_in) begin
         state <= 2'b00;
         addr <= 32'b0;
         r_nw <= 1'b0;
-        type_ <= 3'b0;
+        //type_ <= 3'b0;
         data_available <= 1'b1;
       end
       endcase

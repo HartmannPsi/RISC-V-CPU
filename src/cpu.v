@@ -60,7 +60,7 @@ wire [31:0] addr_ctrl_icache;
 wire available_ctrl;
 wire [31:0] data_in_ctrl_icache = 32'b0;
 wire r_nw_ctrl_icache = 1'b1;
-wire [2:0] type_ctrl_icache = 3'b001; // LHW
+wire [2:0] type_ctrl_icache = 3'b001; // LHU
 // fixed in icache: read only, LW mode
 wire [31:0] data_out_ctrl;
 wire icache_hit;

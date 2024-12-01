@@ -75,6 +75,9 @@ InstDecoder decoder(
 );
 
 task printInst;
+  input [31:0] fetch_addr, inst, imm;
+  input [4:0] op, rd, rs1, rs2;
+  input use_imm;
 begin
 
   $display("pc=%h; inst=%h", fetch_addr, inst);
@@ -281,8 +284,8 @@ always @(posedge clk_in) begin
     // pause
   end
   else begin
-    printInst();
     if (inst_available) begin // inst is valid
+      printInst(fetch_addr, inst, imm, op, rd, rs1, rs2, use_imm);
       if (jalr) begin // pause fetching util jalr is done
         // pause
         cease <= 1'b1;
