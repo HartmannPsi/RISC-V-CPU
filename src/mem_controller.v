@@ -157,6 +157,11 @@ always @(posedge clk_in) begin
   else begin
 
     if (data_available) begin
+
+      if (addr == 32'h30004 && type_[1:0] == 2'b10 && !r_nw) begin // sb 0x30004 (halt)
+        $finish;
+      end
+
       data_available <= 1'b0;
       block <= 1'b0;
       type_ <= 3'b0;
@@ -175,6 +180,8 @@ always @(posedge clk_in) begin
             state <= 2'b00;
             data_available <= 1'b1;
             type_ <= type_in;
+            addr <= addr_in;
+            r_nw <= r_nw_in;
           end
           else begin // word or half-word operation
             state <= 2'b01;

@@ -80,192 +80,193 @@ task printInst;
   input use_imm;
 begin
 
-  $display("pc=%h; inst=%h", fetch_addr, inst);
+  //$display("pc=%0h; inst=%0h", fetch_addr, inst);
+  $write("%0h: ", fetch_addr);
 
   case (op)
   `LB:
   begin
-    $display("LB x%d %d(x%d)", rd, imm, rs1);
+    $display("LB x%0d, %0h(x%0d)", rd, imm, rs1);
   end
 
   `LBU:
   begin
-    $display("LBU x%d %d(x%d)", rd, imm, rs1);
+    $display("LBU x%0d, %0h(x%0d)", rd, imm, rs1);
   end
 
   `LH:
   begin
-    $display("LH x%d %d(x%d)", rd, imm, rs1);
+    $display("LH x%0d, %0h(x%0d)", rd, imm, rs1);
   end
 
   `LHU:
   begin
-    $display("LHU x%d %d(x%d)", rd, imm, rs1);
+    $display("LHU x%0d, %0h(x%0d)", rd, imm, rs1);
   end
 
   `LW:
   begin
-    $display("LW x%d %d(x%d)", rd, imm, rs1);
+    $display("LW x%0d, %0h(x%0d)", rd, imm, rs1);
   end
 
   `SB:
   begin
-    $display("SB x%d %d(x%d)", rs2, imm, rs1);
+    $display("SB x%0d, %0h(x%0d)", rs2, imm, rs1);
   end
 
   `SH:
   begin
-    $display("SH x%d %d(x%d)", rs2, imm, rs1);
+    $display("SH x%0d, %0h(x%0d)", rs2, imm, rs1);
   end
 
   `SW:
   begin
-    $display("SW x%d %d(x%d)", rs2, imm, rs1);
+    $display("SW x%0d, %0h(x%0d)", rs2, imm, rs1);
   end
 
   `BEQ:
   begin
-    $display("BEQ x%d x%d offset=%d", rs1, rs2, imm);
+    $display("BEQ x%0d, x%0d, %0h", rs1, rs2, imm + fetch_addr);
   end
 
   `BGE:
   begin
-    $display("BGE x%d x%d offset=%d", rs1, rs2, imm);
+    $display("BGE x%0d, x%0d, %0h", rs1, rs2, imm + fetch_addr);
   end
 
   `BGEU:
   begin
-    $display("BGEU x%d x%d offset=%d", rs1, rs2, imm);
+    $display("BGEU x%0d, x%0d, %0h", rs1, rs2, imm + fetch_addr);
   end
 
   `BLT:
   begin
-    $display("BLT x%d x%d offset=%d", rs1, rs2, imm);
+    $display("BLT x%0d, x%0d, %0h", rs1, rs2, imm + fetch_addr);
   end
 
   `BLTU:
   begin
-    $display("BLTU x%d x%d offset=%d", rs1, rs2, imm);
+    $display("BLTU x%0d, x%0d, %0h", rs1, rs2, imm + fetch_addr);
   end
 
   `BNE:
   begin
-    $display("BNE x%d x%d offset=%d", rs1, rs2, imm);
+    $display("BNE x%0d, x%0d, %0h", rs1, rs2, imm + fetch_addr);
   end
 
   `JAL:
   begin
-    $display("JAL x%d offset=%d", rd, imm);
+    $display("JAL x%0d, %0h", rd, imm + fetch_addr);
   end
 
   `JALR:
   begin
-    $display("JALR x%d x%d %d", rd, rs1, imm);
+    $display("JALR x%0d, x%0d, %0h", rd, rs1, imm);
   end
 
   `AUIPC:
   begin
-    $display("AUIPC x%d %d", rd, imm);
+    $display("AUIPC x%0d, %0h", rd, imm);
   end
 
   `ADD:
   begin
     if (use_imm) begin // addi
-      $display("ADDI x%d x%d %d", rd, rs1, imm);
+      $display("ADDI x%0d, x%0d, %0d", rd, rs1, $signed(imm));
     end
     else begin // add
-      $display("ADD x%d x%d x%d", rd, rs1, rs2);
+      $display("ADD x%0d, x%0d, x%0d", rd, rs1, rs2);
     end
   end
 
   `SUB:
   begin
-    $display("SUB x%d x%d x%d", rd, rs1, rs2);
+    $display("SUB x%0d, x%0d, x%0d", rd, rs1, rs2);
   end
 
   `AND:
   begin
     if (use_imm) begin // andi
-      $display("ANDI x%d x%d %d", rd, rs1, imm);
+      $display("ANDI x%0d, x%0d, %0d", rd, rs1, $signed(imm));
     end
     else begin // and
-      $display("AND x%d x%d x%d", rd, rs1, rs2);
+      $display("AND x%0d, x%0d, x%0d", rd, rs1, rs2);
     end
   end
 
   `OR:
   begin
     if (use_imm) begin // ori
-      $display("ORI x%d x%d %d", rd, rs1, imm);
+      $display("ORI x%0d, x%0d, %0d", rd, rs1, $signed(imm));
     end
     else begin // or
-      $display("OR x%d x%d x%d", rd, rs1, rs2);
+      $display("OR x%0d, x%0d, x%0d", rd, rs1, rs2);
     end
   end
 
   `XOR:
   begin
     if (use_imm) begin // xori
-      $display("XORI x%d x%d %d", rd, rs1, imm);
+      $display("XORI x%0d, x%0d, %0d", rd, rs1, $signed(imm));
     end
     else begin // xor
-      $display("XOR x%d x%d x%d", rd, rs1, rs2);
+      $display("XOR x%0d, x%0d, x%0d", rd, rs1, rs2);
     end
   end
 
   `SLL:
   begin
     if (use_imm) begin // slli
-      $display("SLLI x%d x%d %d", rd, rs1, imm);
+      $display("SLLI x%0d, x%0d, %0d", rd, rs1, $signed(imm));
     end
     else begin // sll
-      $display("SLL x%d x%d x%d", rd, rs1, rs2);
+      $display("SLL x%0d, x%0d, x%0d", rd, rs1, rs2);
     end
   end
 
   `SRL:
   begin
     if (use_imm) begin // srli
-      $display("SRLI x%d x%d %d", rd, rs1, imm);
+      $display("SRLI x%0d, x%0d, %0d", rd, rs1, $signed(imm));
     end
     else begin // srl
-      $display("SRL x%d x%d x%d", rd, rs1, rs2);
+      $display("SRL x%0d, x%0d, x%0d", rd, rs1, rs2);
     end
   end
 
   `SRA:
   begin
     if (use_imm) begin // srai
-      $display("SRAI x%d x%d %d", rd, rs1, imm);
+      $display("SRAI x%0d, x%0d, %0d", rd, rs1, $signed(imm));
     end
     else begin // sra
-      $display("SRA x%d x%d x%d", rd, rs1, rs2);
+      $display("SRA x%0d, x%0d, x%0d", rd, rs1, rs2);
     end
   end
 
   `SLT:
   begin
     if (use_imm) begin // slti
-      $display("SLTI x%d x%d %d", rd, rs1, imm);
+      $display("SLTI x%0d, x%0d, %0d", rd, rs1, $signed(imm));
     end
     else begin // slt
-      $display("SLT x%d x%d x%d", rd, rs1, rs2);
+      $display("SLT x%0d, x%0d, x%0d", rd, rs1, rs2);
     end
   end
 
   `SLTU:
   begin
     if (use_imm) begin // sltiu
-      $display("SLTIU x%d x%d %d", rd, rs1, imm);
+      $display("SLTIU x%0d, x%0d, %0d", rd, rs1, $signed(imm));
     end
     else begin // sltu
-      $display("SLTU x%d x%d x%d", rd, rs1, rs2);
+      $display("SLTU x%0d, x%0d, x%0d", rd, rs1, rs2);
     end
   end
 
   `LUI:
   begin
-    $display("LUI x%d %d", rd, imm);
+    $display("LUI x%0d, %0h", rd, imm);
   end
 
   default:

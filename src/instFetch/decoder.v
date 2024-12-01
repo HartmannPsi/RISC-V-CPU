@@ -376,8 +376,8 @@ always @(*) begin
       ls = 0;
       use_imm = 1;
       rd = {2'b0, inst[4:2]} + 8;
-      rs1 = 0;
-      rs2 = 2; // x2
+      rs1 = 2; // x2
+      rs2 = 0;
       imm = {22'b0, inst[10:7], inst[12:11], inst[5], inst[6], 2'b0};
       jalr = 0;
     end
