@@ -24,7 +24,9 @@ module MemController(
 
   output wire [31:0] data_out,
   output reg data_available, // 1 for data_out is valid
+  output reg [1:0] task_src, // 00: none, 01: lsb, 10: icache
   output wire icache_block, // 1 for icache pending
+  //output wire working, // 1 for working
 
   input wire io_buffer_full
 );
@@ -34,13 +36,18 @@ wire [31:0] data_in = activate_in_lsb ? data_in_lsb : data_in_icache;
 wire r_nw_in = activate_in_lsb ? r_nw_in_lsb : r_nw_in_icache;
 wire [2:0] type_in = activate_in_lsb ? type_in_lsb : type_in_icache;
 wire activate_in  = activate_in_lsb || activate_in_icache;
+// 00: none, 01: lsb, 10: icache
+wire [1:0] task_src_in = activate_in_lsb ? 2'b01 : (activate_in_icache ? 2'b10 : 2'b00);
 
 reg [31:0] data;
 reg [31:0] addr;
 reg r_nw;
+reg r_nw_buf;
 reg block;
 reg [2:0] type_;
 reg [1:0] state;
+
+// assign working = state != 2'b0;
 
 wire called = rdy_in && activate_in && !io_buffer_full && !data_available;
 
@@ -87,7 +94,7 @@ function [7:0] memWrite;
 
 endfunction
 
-assign mem_write = memWrite(state, r_nw, data, called, data_in[7:0]);
+assign mem_write = memWrite(state, r_nw_out, data, called, data_in[7:0]);
 
 // assign mem_write = r_nw_out ? 8'b0 : ((called && state == 2'b0) ? data_in[7:0] : data[7 + state * 8 : state * 8]);
 
@@ -146,10 +153,12 @@ always @(posedge clk_in) begin
     data_available <= 1'b0;
     data <= 32'b0;
     addr <= 32'b0;
-    r_nw <= 1'b0;
+    r_nw <= 1'b1;
+    r_nw_buf <= 1'b1;
     type_ <= 3'b0;
     state <= 2'b0;
     block <= 1'b0;
+    task_src <= 2'b00;
   end
   else if (!rdy_in) begin
     // pause
@@ -158,13 +167,14 @@ always @(posedge clk_in) begin
 
     if (data_available) begin
 
-      if (addr == 32'h30004 && type_[1:0] == 2'b10 && !r_nw) begin // sb 0x30004 (halt)
+      if (addr == 32'h30004 && type_[1:0] == 2'b10 && !r_nw_buf) begin // sb 0x30004 (halt)
         $finish;
       end
 
       data_available <= 1'b0;
       block <= 1'b0;
       type_ <= 3'b0;
+      task_src <= 2'b00;
     end
     else begin
       case (state)
@@ -181,7 +191,7 @@ always @(posedge clk_in) begin
             data_available <= 1'b1;
             type_ <= type_in;
             addr <= addr_in;
-            r_nw <= r_nw_in;
+            // r_nw <= r_nw_in;
           end
           else begin // word or half-word operation
             state <= 2'b01;
@@ -192,6 +202,8 @@ always @(posedge clk_in) begin
               data <= data_in;
             end
           end
+          r_nw_buf <= r_nw_in;
+          task_src <= task_src_in;
 
         end
       end
@@ -203,7 +215,7 @@ always @(posedge clk_in) begin
         end
         if (type_[1:0] == 2'b01) begin // half-word opertion
           addr <= 32'b0;
-          r_nw <= 1'b0;
+          r_nw <= 1'b1;
           //type_ <= 3'b0;
           data_available <= 1'b1;
           state <= 2'b00;
@@ -230,7 +242,7 @@ always @(posedge clk_in) begin
         end
         state <= 2'b00;
         addr <= 32'b0;
-        r_nw <= 1'b0;
+        r_nw <= 1'b1;
         //type_ <= 3'b0;
         data_available <= 1'b1;
       end

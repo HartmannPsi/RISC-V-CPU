@@ -102,7 +102,7 @@ always @(posedge clk_in) begin
         end
       end
 
-      if (cdb_addr == head_src_addr) begin // pop
+      if (cdb_active && cdb_addr == head_src_addr && cdb_addr != 32'b0) begin // pop
 
         // update the fsm state
         if (calc_res) begin // need to branch actually

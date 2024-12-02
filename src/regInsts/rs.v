@@ -137,13 +137,13 @@ assign launch_fail = inst_receive && buffer_full;
 
 wire [2:0] free_idx = buffer_full ? 3'b111 : (inst_receive ? getFreeBuf(rs_buffer[0], rs_buffer[1], rs_buffer[2]) : 3'b111);
 wire [3:0] actual_qj = (op == `JAL || op == `AUIPC || op == `LUI) ? `None : qj;
-wire [31:0] actual_vk = use_imm ? imm : vk;
-wire [3:0] actual_qk = use_imm ? `None : qk;
+wire [31:0] actual_vk = (use_imm && !branch_in) ? imm : vk;
+wire [3:0] actual_qk = (use_imm && !branch_in) ? `None : qk;
 
 assign choose_tag = inst_receive ? getTag(free_idx) : `None;
 assign rs1_idx = rs1;
 assign rs2_idx = rs2;
-assign rd_idx = branch_in ? 5'b0 : rd;
+assign rd_idx = (inst_receive && !branch_in) ? rd : 5'b0;
 assign inst_valid_out = inst_receive;
 
 wire [2:0] ready_idx = getReadyBuf(rs_buffer[0], rs_buffer[1], rs_buffer[2]);
@@ -167,6 +167,19 @@ ALU alu(
   .jalr_addr(jalr_addr)
 );
 
+task Monitor;
+input [31:0] op1, op2;
+input [4:0] alu_op;
+input [31:0] res;
+
+begin
+  if (alu_op == `BNE) begin
+    $display("BNE OP: op1=%0h, op2=%0h, res=%0h", op1, op2, res);
+  end
+end
+
+endtask
+
 
 always @(posedge clk_in) begin
   if (rst_in) begin
@@ -179,6 +192,7 @@ always @(posedge clk_in) begin
     // pause
   end
   else begin
+    // Monitor(op1, op2, alu_op, submit_val);
 
     if (submit_valid) begin // inner update
       for (i = 0; i < 3; i = i + 1) begin

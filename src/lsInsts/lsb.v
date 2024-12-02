@@ -48,6 +48,7 @@ module LoadStoreBuffer(
 
   // ls ops from mem_controller
   input wire [31:0] ld_val,
+  // input wire mem_working,
   input wire ls_done_in,
 
 
@@ -61,6 +62,7 @@ module LoadStoreBuffer(
 reg [142:0] ls_buffer[9:0]; // {ls_ready, imm, addr, vj, vk, qj, qk, op, busy}
 reg [3:0] i, front, rear;
 reg [3:0] ongoing_idx;
+// reg pending;
 
 wire empty = front == rear;
 wire full = front == rear + 1 || (front == 0 && rear == 9);
@@ -221,6 +223,7 @@ always @(posedge clk_in) begin
     i <= 4'b0;
     front <= 4'b0;
     rear <= 4'b0;
+    // pending <= 1'b0;
   end
   else if (!rdy_in) begin
     // pause
@@ -257,9 +260,18 @@ always @(posedge clk_in) begin
 
     if (activate_cache) begin // store the idx to ongoing_idx
       ongoing_idx <= ready_idx;
+
+      // if (mem_working) begin // wait for next submission
+      //   pending <= 1'b1;
+      // end
     end
 
     if (submit_valid && ongoing_idx != 4'b1111) begin // pop
+
+      // if (pending) begin // wait for next submission
+      //   pending <= 1'b0;
+      // end
+      // else begin
       ls_buffer[ongoing_idx] <= 143'b0;
       ongoing_idx <= 4'b1111;
       if (front == 9) begin
@@ -268,6 +280,8 @@ always @(posedge clk_in) begin
       else begin
         front <= front + 1;
       end
+      // end
+      
     end
   end
 end

@@ -51,7 +51,7 @@ always @(posedge clk_in) begin
     end
     front <= 0;
     rear <= 0;
-    //i <= 0;
+    // i <= 0;
   end
   else if (!rdy_in) begin
     // pause

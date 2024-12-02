@@ -65,6 +65,7 @@ wire [2:0] type_ctrl_icache = 3'b001; // LHU
 wire [31:0] data_out_ctrl;
 wire icache_hit;
 wire icache_block;
+wire [1:0] task_src_ctrl;
 
 MemController mem_ctrl(
   .clk_in(clk_in),
@@ -72,7 +73,7 @@ MemController mem_ctrl(
   .rdy_in(rdy_in),
 
   .mem_read(dout_mem_ctrl),
-  .mem_write(mem_din),
+  .mem_write(din_mem_ctrl),
   .mem_addr(mem_addr_ram_ctrl),
   .r_nw_out(r_nw_ram_ctrl),
 
@@ -95,6 +96,7 @@ MemController mem_ctrl(
 
   .data_out(data_out_ctrl),
   .data_available(available_ctrl),
+  .task_src(task_src_ctrl),
   .icache_block(icache_block),
 
   .io_buffer_full(io_buffer_full)
@@ -115,7 +117,7 @@ InstCache icache(
 
   .rewrite_data(data_out_ctrl),
   .addr_out(addr_ctrl_icache),
-  .write_enable(available_ctrl),
+  .write_enable(available_ctrl && task_src_ctrl == 2'b10),
   .icache_block(icache_block),
 
   .cache_hit(icache_hit)
@@ -141,7 +143,7 @@ wire foq_full_foq;
 
 InstProcessor processor(
   .clk_in(clk_in),
-  .rst_in(rst_in | predict_fail_bp),
+  .rst_in(rst_in),
   .rdy_in(rdy_in),
 
   .inst_available(icache_hit),
@@ -352,7 +354,7 @@ LoadStoreBuffer lsb(
   .activate_cache(activate_mem_lsb),
 
   .ld_val(data_out_ctrl),
-  .ls_done_in(available_ctrl),
+  .ls_done_in(available_ctrl && task_src_ctrl == 2'b01),
 
   .vj(vj_regfile),
   .vk(vk_regfile),
@@ -362,7 +364,7 @@ LoadStoreBuffer lsb(
 
 RegFile reg_file(
   .clk_in(clk_in),
-  .rst_in(rst_in | predict_fail_bp),
+  .rst_in(rst_in),
   .rdy_in(rdy_in),
 
   .rd(rd_idx_rs | rd_idx_lsb),
@@ -383,7 +385,9 @@ RegFile reg_file(
   .vj(vj_regfile),
   .vk(vk_regfile),
   .qj(qj_regfile),
-  .qk(qk_regfile)
+  .qk(qk_regfile),
+
+  .predict_fail(predict_fail_bp)
 );
 
 ReorderBuffer rob(

@@ -27,7 +27,9 @@ module RegFile(
   output wire [31:0] vj,
   output wire [31:0] vk,
   output wire [3:0] qj,
-  output wire [3:0] qk
+  output wire [3:0] qk,
+
+  input wire predict_fail
 );
 
 reg [31:0] reg_file[31:0];
@@ -43,6 +45,15 @@ assign qk = inst_valid ? depend_file[rs2] : `None;
 assign vj = (inst_valid && qj == `None) ? reg_file[rs1] : 32'b0;
 assign vk = (inst_valid && qk == `None) ? reg_file[rs2] : 32'b0;
 
+wire [31:0] x12 = reg_file[12];
+
+task Monitor;
+input [31:0] val;
+begin
+  $display("x12 = %0h", val);
+end
+endtask
+
 always @(posedge clk_in) begin
   if (rst_in) begin
     for (i = 0; i < 32; i = i + 1) begin
@@ -54,14 +65,24 @@ always @(posedge clk_in) begin
   else if (!rdy_in) begin
     // pause
   end
+  else if (predict_fail) begin
+    for (i = 0; i < 32; i = i + 1) begin // clear all depends
+      depend_file[i] <= 4'b0;
+    end
+  end
   else begin
     reg_file[0] <= 32'b0;
     depend_file[0] <= 4'b0;
+
+    // if (inst_valid) begin
+    //   Monitor(x12);
+    // end
 
     if (inst_valid && rd != 5'b0) begin // update depend of rd according to inst launched
       depend_file[rd] <= rd_tag;
     end
 
+    // may cause problem !!!!!!!
     if (submit_valid_rs) begin // update reg_file according to inst submitted
       for (i = 1; i < 32; i = i + 1) begin
         if (depend_file[i] == submit_tag_rs) begin

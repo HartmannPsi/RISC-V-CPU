@@ -286,7 +286,10 @@ always @(posedge clk_in) begin
     // pause
   end
   else begin
-    if (inst_available) begin // inst is valid
+    if (predict_fail) begin // reset from predict fail
+      pc <= fail_addr;
+    end
+    else if (inst_available) begin // inst is valid
       printInst(fetch_addr, inst, imm, op, rd, rs1, rs2, use_imm);
       if (jalr) begin // pause fetching util jalr is done
         // pause
@@ -299,10 +302,7 @@ always @(posedge clk_in) begin
         // pause
       end
       else begin // ordinary fetching
-        if (predict_fail) begin // reset from predict fail
-          pc <= fail_addr;
-        end
-        else if (branch) begin // go to predicted branch addr
+        if (branch) begin // go to predicted branch addr
           pc <= branch_addr;
         end
         else if (op == `JAL) begin // go to unconditional branch addr
