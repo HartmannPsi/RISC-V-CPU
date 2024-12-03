@@ -34,10 +34,10 @@ wire cdb_active;
 wire [3:0] cdb_tag;
 
 
-wire r_nw_ram_ctrl;
-wire [31:0] mem_addr_ram_ctrl;
-wire [7:0] din_mem_ctrl;
-wire [7:0] dout_mem_ctrl;
+// wire r_nw_ram_ctrl;
+// wire [31:0] mem_addr_ram_ctrl;
+// wire [7:0] din_mem_ctrl;
+// wire [7:0] dout_mem_ctrl;
 
 wire [31:0] st_val_lsb;
 wire [31:0] ls_addr_lsb;
@@ -47,14 +47,14 @@ wire activate_mem_lsb;
 
 wire predict_fail_bp;
 
-ram memory(
-  .clk_in(clk_in),
-  .en_in(rdy_in),
-  .r_nw_in(r_nw_ram_ctrl),
-  .a_in(mem_addr_ram_ctrl[17-1:0]),
-  .d_in(din_mem_ctrl),
-  .d_out(dout_mem_ctrl)
-);
+// ram memory(
+//   .clk_in(clk_in),
+//   .en_in(rdy_in),
+//   .r_nw_in(r_nw_ram_ctrl),
+//   .a_in(mem_addr_ram_ctrl[17-1:0]),
+//   .d_in(din_mem_ctrl),
+//   .d_out(dout_mem_ctrl)
+// );
 
 wire [31:0] addr_ctrl_icache;
 wire available_ctrl;
@@ -66,16 +66,18 @@ wire [31:0] data_out_ctrl;
 wire icache_hit;
 wire icache_block;
 wire [1:0] task_src_ctrl;
+wire not_mem_wr;
+assign mem_wr = ~not_mem_wr;
 
 MemController mem_ctrl(
   .clk_in(clk_in),
   .rst_in(rst_in),
   .rdy_in(rdy_in),
 
-  .mem_read(dout_mem_ctrl),
-  .mem_write(din_mem_ctrl),
-  .mem_addr(mem_addr_ram_ctrl),
-  .r_nw_out(r_nw_ram_ctrl),
+  .mem_read(mem_din),
+  .mem_write(mem_dout),
+  .mem_addr(mem_a),
+  .r_nw_out(not_mem_wr),
 
   // .addr_in(addr_ctrl_icache | ls_addr_lsb),
   // .data_in(data_in_ctrl_icache | st_val_lsb),

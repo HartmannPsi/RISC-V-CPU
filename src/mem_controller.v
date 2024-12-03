@@ -42,10 +42,58 @@ wire [1:0] task_src_in = activate_in_lsb ? 2'b01 : (activate_in_icache ? 2'b10 :
 reg [31:0] data;
 reg [31:0] addr;
 reg r_nw;
-reg r_nw_buf;
+// reg r_nw_buf;
 reg block;
 reg [2:0] type_;
 reg [1:0] state;
+
+task Monitor;
+input [1:0] task_src_in;
+input [31:0] addr_in;
+input [31:0] data_in;
+input [2:0] type_in;
+input r_nw_in;
+
+begin
+  if (task_src_in == 2'b01) begin
+    case (type_in)
+    3'b000: // W
+    if (r_nw_in) begin
+      $display("LW addr=%0h, data=%0h", addr_in, data_in);
+    end
+    else begin
+      $display("SW addr=%0h, data=%0h", addr_in, data_in);
+    end
+
+    3'b001: // HU
+    if (r_nw_in) begin
+      $display("LHU addr=%0h, data=%0h", addr_in, data_in);
+    end
+    else begin
+      $display("SH addr=%0h, data=%0h", addr_in, data_in);
+    end
+
+    3'b010: // BU
+    if (r_nw_in) begin
+      $display("LBU addr=%0h, data=%0h", addr_in, data_in);
+    end
+    else begin
+      $display("SB addr=%0h, data=%0h", addr_in, data_in);
+    end
+
+    3'b101: // H
+    begin
+      $display("LH addr=%0h, data=%0h", addr_in, data_in);
+    end
+
+    3'b110: // B
+    begin
+      $display("LB addr=%0h, data=%0h", addr_in, data_in);
+    end
+    endcase
+  end
+end
+endtask
 
 // assign working = state != 2'b0;
 
@@ -154,7 +202,7 @@ always @(posedge clk_in) begin
     data <= 32'b0;
     addr <= 32'b0;
     r_nw <= 1'b1;
-    r_nw_buf <= 1'b1;
+    // r_nw_buf <= 1'b1;
     type_ <= 3'b0;
     state <= 2'b0;
     block <= 1'b0;
@@ -167,9 +215,9 @@ always @(posedge clk_in) begin
 
     if (data_available) begin
 
-      if (addr == 32'h30004 && type_[1:0] == 2'b10 && !r_nw_buf) begin // sb 0x30004 (halt)
-        $finish;
-      end
+      // if (addr == 32'h30004 && type_[1:0] == 2'b10 && !r_nw_buf) begin // sb 0x30004 (halt)
+      //   $finish;
+      // end
 
       data_available <= 1'b0;
       block <= 1'b0;
@@ -181,6 +229,8 @@ always @(posedge clk_in) begin
       2'b00: // free state
       begin
         if (called) begin
+
+          // Monitor(task_src_in, addr_in, data_in, type_in, r_nw_in);
 
           if (activate_in_lsb) begin // icache block
             block <= 1'b1;
@@ -202,7 +252,7 @@ always @(posedge clk_in) begin
               data <= data_in;
             end
           end
-          r_nw_buf <= r_nw_in;
+          // r_nw_buf <= r_nw_in;
           task_src <= task_src_in;
 
         end
