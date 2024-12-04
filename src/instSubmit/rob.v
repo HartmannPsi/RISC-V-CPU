@@ -31,13 +31,15 @@ module ReorderBuffer(
   output wire [3:0] cdb_tag,
   output wire [31:0] cdb_val,
   output wire [31:0] cdb_addr,
+  output wire [4:0] cdb_rd_idx,
   output wire cdb_active
 );
 
-reg [68:0] rob_queue[`ROB_SIZE - 1:0]; // {tag, val, addr, solved}
+reg [73:0] rob_queue[`ROB_SIZE - 1:0]; // {rd, tag, val, addr, solved}
 reg [`ROB_SIZE_W - 1:0] front, rear;
 integer i;
 
+assign cdb_rd_idx = rob_queue[front][73:69];
 assign cdb_active = rob_queue[front][0];
 assign cdb_addr = rob_queue[front][32:1];
 assign cdb_val = rob_queue[front][64:33];
@@ -47,7 +49,7 @@ assign push_rob_tag = push_valid ? (rear + 1) : 0; // tag starts from 1, 0 means
 integer idx_rs;
 integer idx_lsb;
 
-wire [68:0] push_data = {push_rob_tag, 32'b0, push_src_addr, 1'b0};
+wire [73:0] push_data = {push_rd_idx, push_rob_tag, 32'b0, push_src_addr, 1'b0};
 
 task Monitor;
 input [31:0] addr, val;
@@ -61,7 +63,7 @@ endtask
 always @(posedge clk_in) begin
   if (rst_in) begin
     for (i = 0; i < `ROB_SIZE; i = i + 1) begin
-      rob_queue[i] <= 69'b0;
+      rob_queue[i] <= 74'b0;
     end
     front <= 0;
     rear <= 0;
@@ -78,7 +80,7 @@ always @(posedge clk_in) begin
 
     if (predict_fail) begin // clear queue
       for (i = 0; i < `ROB_SIZE; i = i + 1) begin
-        rob_queue[i] <= 69'b0;
+        rob_queue[i] <= 74'b0;
       end
       front <= 0;
       rear <= 0;
@@ -144,7 +146,7 @@ always @(posedge clk_in) begin
       end
 
       if (cdb_active) begin // pop
-        rob_queue[front] <= 69'b0;
+        rob_queue[front] <= 74'b0;
         if (front == `ROB_SIZE - 1) begin
           front <= 0;
         end

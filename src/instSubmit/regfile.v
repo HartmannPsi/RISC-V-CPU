@@ -16,6 +16,7 @@ module RegFile(
   input wire [3:0] cdb_tag,
   input wire [31:0] cdb_val,
   input wire [31:0] cdb_addr,
+  input wire [4:0] cdb_rd_idx,
   input wire cdb_active,
 
   // rs res
@@ -95,12 +96,20 @@ always @(posedge clk_in) begin
     // end
 
     if (cdb_active) begin // update depend & val of rd according to inst submitted
-      for (i = 1; i < 32; i = i + 1) begin
-        if (depend_file[i] == cdb_tag) begin
-          reg_file[i] <= cdb_val;
-          depend_file[i] <= `None;
+      // for (i = 1; i < 32; i = i + 1) begin
+      //   if (depend_file[i] == cdb_tag) begin
+      //     reg_file[i] <= cdb_val;
+      //     depend_file[i] <= `None;
+      //   end
+      // end
+      if (cdb_rd_idx != 5'b0) begin
+        reg_file[cdb_rd_idx] <= cdb_val;
+        
+        if (cdb_tag == depend_file[cdb_rd_idx]) begin
+          depend_file[cdb_rd_idx] <= `None;
         end
       end
+      
     end
   end
 end

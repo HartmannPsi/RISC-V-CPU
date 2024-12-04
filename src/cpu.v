@@ -32,6 +32,7 @@ wire [31:0] cdb_val;
 wire [31:0] cdb_addr;
 wire cdb_active;
 wire [3:0] cdb_tag;
+wire [4:0] cdb_rd_idx;
 
 integer cycle_cnt; // just for debugging
 
@@ -383,6 +384,7 @@ RegFile reg_file(
   .cdb_tag(cdb_tag),
   .cdb_val(cdb_val),
   .cdb_addr(cdb_addr),
+  .cdb_rd_idx(cdb_rd_idx),
   .cdb_active(cdb_active),
 
   .submit_val_rs(submit_val_rs),
@@ -403,6 +405,7 @@ ReorderBuffer rob(
   .rdy_in(rdy_in),
   .push_src_addr(addr_foq),
   .push_valid(inst_valid_foq & !(launch_fail_rs | launch_fail_lsb)),
+  .push_rd_idx(rd_idx_rs | rd_idx_lsb),
 
   .submit_tag_rs(submit_tag_rs),
   .submit_val_rs(submit_val_rs),
@@ -419,6 +422,7 @@ ReorderBuffer rob(
   .cdb_tag(cdb_tag),
   .cdb_val(cdb_val),
   .cdb_addr(cdb_addr),
+  .cdb_rd_idx(cdb_rd_idx),
   .cdb_active(cdb_active)
 );
 
