@@ -11,6 +11,7 @@ module RegFile(
   input wire [4:0] rs2,
   input wire [3:0] rd_tag,
   input wire inst_valid,
+  input wire push_valid,
 
   // data to update from cdb
   input wire [3:0] cdb_tag,
@@ -81,7 +82,7 @@ always @(posedge clk_in) begin
     //   Monitor(reg_val, reg_depend);
     // end
 
-    if (inst_valid && rd != 5'b0) begin // update depend of rd according to inst launched
+    if (inst_valid && push_valid && rd != 5'b0) begin // update depend of rd according to inst launched
       depend_file[rd] <= rd_tag;
     end
 
@@ -109,7 +110,6 @@ always @(posedge clk_in) begin
           depend_file[cdb_rd_idx] <= `None;
         end
       end
-      
     end
   end
 end

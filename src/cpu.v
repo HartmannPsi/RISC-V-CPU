@@ -380,6 +380,7 @@ RegFile reg_file(
   .rs2(rs2_idx_rs | rs2_idx_lsb),
   .rd_tag(push_tag_rob),
   .inst_valid(inst_valid_rs | inst_valid_lsb),
+  .push_valid(!(launch_fail_rs | launch_fail_lsb)),
 
   .cdb_tag(cdb_tag),
   .cdb_val(cdb_val),
