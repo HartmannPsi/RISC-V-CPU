@@ -58,13 +58,13 @@
 `define BP_SIZE (1 << `BP_SIZE_W)
 
 `define FOQ_SIZE_W 4
-`define FOQ_SIZE ((1 << `FOQ_SIZE_W))
+`define FOQ_SIZE ((1 << `FOQ_SIZE_W) - 1)
 
 `define ICACHE_ADDR_W 6
 `define ICACHE_SIZE (1 << `ICACHE_ADDR_W)
 
 `define ROB_SIZE_W 4
-`define ROB_SIZE ((1 << `ROB_SIZE_W))
+`define ROB_SIZE ((1 << `ROB_SIZE_W) - 1)
 
 `define DCACHE_ADDR_W 7
 `define DCACHE_SIZE (1 << `DCACHE_ADDR_W)
