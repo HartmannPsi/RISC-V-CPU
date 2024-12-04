@@ -6,9 +6,10 @@ module ReorderBuffer(
   input wire rdy_in,
 
   // push insts from foq & rs & lsb
-  input wire [3:0] push_tag,
+  //input wire [3:0] push_tag,
   input wire [31:0] push_src_addr,
   input wire push_valid,
+  input wire [4:0] push_rd_idx,
 
   // submit insts from rs
   input wire [3:0] submit_tag_rs,
@@ -22,6 +23,9 @@ module ReorderBuffer(
 
   // clear signal from bp
   input wire predict_fail,
+
+  // the tag in rob of the inst pushed
+  output wire [3:0] push_rob_tag,
 
   // cdb broadcast value
   output wire [3:0] cdb_tag,
@@ -38,11 +42,21 @@ assign cdb_active = rob_queue[front][0];
 assign cdb_addr = rob_queue[front][32:1];
 assign cdb_val = rob_queue[front][64:33];
 assign cdb_tag = rob_queue[front][68:65];
+assign push_rob_tag = push_valid ? (rear + 1) : 0; // tag starts from 1, 0 means None
 
 integer idx_rs;
 integer idx_lsb;
 
-wire [68:0] push_data = {push_tag, 32'b0, push_src_addr, 1'b0};
+wire [68:0] push_data = {push_rob_tag, 32'b0, push_src_addr, 1'b0};
+
+task Monitor;
+input [31:0] addr, val;
+input [3:0] tag;
+
+begin
+  $display("ROB: tag=%0h, addr=%0h, val=%0h", tag, addr, val);
+end
+endtask
 
 always @(posedge clk_in) begin
   if (rst_in) begin
@@ -57,6 +71,10 @@ always @(posedge clk_in) begin
     // pause
   end
   else begin
+
+    // if (cdb_active) begin
+    //   Monitor(cdb_addr, cdb_val, cdb_tag);
+    // end
 
     if (predict_fail) begin // clear queue
       for (i = 0; i < `ROB_SIZE; i = i + 1) begin

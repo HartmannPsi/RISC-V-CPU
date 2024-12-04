@@ -33,11 +33,15 @@ wire [31:0] cdb_addr;
 wire cdb_active;
 wire [3:0] cdb_tag;
 
+integer cycle_cnt; // just for debugging
+
 
 // wire r_nw_ram_ctrl;
 // wire [31:0] mem_addr_ram_ctrl;
 // wire [7:0] din_mem_ctrl;
 // wire [7:0] dout_mem_ctrl;
+
+wire [3:0] push_tag_rob;
 
 wire [31:0] st_val_lsb;
 wire [31:0] ls_addr_lsb;
@@ -224,7 +228,7 @@ FpOpQueue foq(
 
   .inst_out_valid(inst_valid_foq),
 
-  .inst_out_success(!launch_fail_rs | !launch_fail_lsb), // TODO
+  .launch_fail(launch_fail_rs | launch_fail_lsb), // TODO
 
   .foq_full(foq_full_foq),
 
@@ -239,6 +243,7 @@ BranchPredictor bp(
   .branch(branch_op_push),
   .imm(imm_push),
   .inst_length(inst_length_icache),
+  .foq_full(foq_full_foq),
   .pc_in(addr_icache_prcs),
 
   .cdb_val(cdb_val),
@@ -252,7 +257,7 @@ BranchPredictor bp(
   .branch_addr(branch_addr_bp)
 );
 
-wire [3:0] choose_tag_rs;
+// wire [3:0] choose_tag_rs;
 wire [4:0] rs1_idx_rs;
 wire [4:0] rs2_idx_rs;
 wire [4:0] rd_idx_rs;
@@ -288,7 +293,7 @@ ReservationStation rs(
   .cdb_active(cdb_active),
 
   .launch_fail(launch_fail_rs),
-  .choose_tag(choose_tag_rs),
+  .choose_tag(push_tag_rob),
   .rs1_idx(rs1_idx_rs),
   .rs2_idx(rs2_idx_rs),
   .rd_idx(rd_idx_rs),
@@ -307,7 +312,7 @@ ReservationStation rs(
   .qk(qk_regfile)
 );
 
-wire [3:0] choose_tag_lsb;
+// wire [3:0] choose_tag_lsb;
 wire [4:0] rs1_idx_lsb;
 wire [4:0] rs2_idx_lsb;
 wire [4:0] rd_idx_lsb;
@@ -339,7 +344,7 @@ LoadStoreBuffer lsb(
   .cdb_active(cdb_active),
 
   .launch_fail(launch_fail_lsb),
-  .choose_tag(choose_tag_lsb),
+  .choose_tag(push_tag_rob),
   .rs1_idx(rs1_idx_lsb),
   .rs2_idx(rs2_idx_lsb),
   .rd_idx(rd_idx_lsb),
@@ -372,7 +377,7 @@ RegFile reg_file(
   .rd(rd_idx_rs | rd_idx_lsb),
   .rs1(rs1_idx_rs | rs1_idx_lsb),
   .rs2(rs2_idx_rs | rs2_idx_lsb),
-  .rd_tag(choose_tag_rs | choose_tag_lsb),
+  .rd_tag(push_tag_rob),
   .inst_valid(inst_valid_rs | inst_valid_lsb),
 
   .cdb_tag(cdb_tag),
@@ -396,9 +401,8 @@ ReorderBuffer rob(
   .clk_in(clk_in),
   .rst_in(rst_in | predict_fail_bp),
   .rdy_in(rdy_in),
-  .push_tag(choose_tag_rs | choose_tag_lsb),
   .push_src_addr(addr_foq),
-  .push_valid(inst_valid_foq),
+  .push_valid(inst_valid_foq & !(launch_fail_rs | launch_fail_lsb)),
 
   .submit_tag_rs(submit_tag_rs),
   .submit_val_rs(submit_val_rs),
@@ -410,6 +414,8 @@ ReorderBuffer rob(
 
   .predict_fail(predict_fail_bp),
 
+  .push_rob_tag(push_tag_rob),
+
   .cdb_tag(cdb_tag),
   .cdb_val(cdb_val),
   .cdb_addr(cdb_addr),
@@ -420,7 +426,7 @@ always @(posedge clk_in)
   begin
     if (rst_in)
       begin
-      
+        cycle_cnt <= 0;
       end
     else if (!rdy_in)
       begin
@@ -428,7 +434,7 @@ always @(posedge clk_in)
       end
     else
       begin
-      
+        cycle_cnt <= cycle_cnt + 1;
       end
   end
 

@@ -27,7 +27,7 @@ module LoadStoreBuffer(
   // whether pending
   output wire launch_fail,
   // tag of inst launched
-  output wire [3:0] choose_tag,
+  input wire [3:0] choose_tag,
   // idx of register needed
   output wire [4:0] rs1_idx,
   output wire [4:0] rs2_idx,
@@ -59,7 +59,7 @@ module LoadStoreBuffer(
   input wire [3:0] qk
 );
 
-reg [142:0] ls_buffer[9:0]; // {ls_ready, imm, addr, vj, vk, qj, qk, op, busy}
+reg [146:0] ls_buffer[9:0]; // {submit_tag, ls_ready, imm, addr, vj, vk, qj, qk, op, busy}
 reg [3:0] i, front, rear;
 reg [3:0] ongoing_idx;
 // reg pending;
@@ -190,7 +190,22 @@ wire [3:0] free_idx = buffer_full ? 4'b1111 : (inst_receive ? getFreeBuf(full, r
 
 wire [3:0] actual_qk = input_ld_inst ? `None : qk;
 
-assign choose_tag = inst_receive ? getTag(free_idx) : `None;
+function CDBReceive;
+input [3:0] push_tag;
+input [3:0] cdb_tag;
+input cdb_active;
+
+begin
+  CDBReceive = cdb_active && push_tag != `None && push_tag == cdb_tag;
+end
+endfunction
+
+wire [31:0] push_vj = CDBReceive(qj, cdb_tag, cdb_active) ? cdb_val : vj;
+wire [31:0] push_vk = CDBReceive(actual_qk, cdb_tag, cdb_active) ? cdb_val : vk;
+wire [3:0] push_qj = CDBReceive(qj, cdb_tag, cdb_active) ? `None : qj;
+wire [3:0] push_qk = CDBReceive(actual_qk, cdb_tag, cdb_active) ? `None : actual_qk;
+
+// assign choose_tag = inst_receive ? getTag(free_idx) : `None;
 assign rs1_idx = rs1;
 assign rs2_idx = rs2;
 assign rd_idx = input_ld_inst ? rd : 5'b0;
@@ -205,7 +220,7 @@ wire ready_ld_inst = ready_idx == 4'b1111 ? 1'b0 : (ls_buffer[ready_idx][5:1] ==
 //                                                       ls_buffer[ready_idx][5:1] == `SW);
 
 assign submit_valid = ongoing_idx != 4'b1111 && ls_done_in;
-assign submit_tag = submit_valid ? getTag(ongoing_idx) : `None;
+assign submit_tag = submit_valid ? ls_buffer[ongoing_idx][146:143] : `None;
 assign submit_val = submit_valid ? ld_val : 32'b0;
 
 assign activate_cache = ready_idx != 4'b1111 && ls_buffer[ready_idx][142] && (ls_buffer[ready_idx][13:10] == `None) && (ls_buffer[ready_idx][9:6] == `None); // ls_ready
@@ -217,7 +232,7 @@ assign ls_addr = ls_buffer[ready_idx][141:110] + ls_buffer[ready_idx][77:46]; //
 always @(posedge clk_in) begin
   if (rst_in) begin
     for (i = 0; i < 10; i = i + 1) begin
-      ls_buffer[i] <= 143'b0;
+      ls_buffer[i] <= 147'b0;
     end
     ongoing_idx <= 4'b1111;
     i <= 4'b0;
@@ -243,13 +258,13 @@ always @(posedge clk_in) begin
       end
     end
     else begin // renew st inst
-      if (ls_buffer[ready_idx][109:78] == cdb_addr) begin // addr == cdb_addr
+      if (ls_buffer[ready_idx][146:143] == cdb_tag) begin // tag == cdb_tag
         ls_buffer[ready_idx][142] <= 1'b1; // ls_ready
       end
     end
 
     if (free_idx != 4'b1111) begin // push
-      ls_buffer[free_idx] <= {input_ld_inst, imm, addr, vj, vk, qj, actual_qk, op, 1'b1};
+      ls_buffer[free_idx] <= {choose_tag, input_ld_inst, imm, addr, push_vj, push_vk, push_qj, push_qk, op, 1'b1};
       if (rear == 9) begin
         rear <= 4'b0;
       end
@@ -272,7 +287,7 @@ always @(posedge clk_in) begin
       //   pending <= 1'b0;
       // end
       // else begin
-      ls_buffer[ongoing_idx] <= 143'b0;
+      ls_buffer[ongoing_idx] <= 147'b0;
       ongoing_idx <= 4'b1111;
       if (front == 9) begin
         front <= 4'b0;

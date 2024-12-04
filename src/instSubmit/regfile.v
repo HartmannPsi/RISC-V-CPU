@@ -45,12 +45,14 @@ assign qk = inst_valid ? depend_file[rs2] : `None;
 assign vj = (inst_valid && qj == `None) ? reg_file[rs1] : 32'b0;
 assign vk = (inst_valid && qk == `None) ? reg_file[rs2] : 32'b0;
 
-wire [31:0] x12 = reg_file[12];
+wire [31:0] reg_val = reg_file[15];
+wire [3:0] reg_depend = depend_file[15];
 
 task Monitor;
 input [31:0] val;
+input [3:0] dep;
 begin
-  $display("x12 = %0h", val);
+  $display("val=%0h, dep=%0h", val, dep);
 end
 endtask
 
@@ -75,7 +77,7 @@ always @(posedge clk_in) begin
     depend_file[0] <= 4'b0;
 
     // if (inst_valid) begin
-    //   Monitor(x12);
+    //   Monitor(reg_val, reg_depend);
     // end
 
     if (inst_valid && rd != 5'b0) begin // update depend of rd according to inst launched
@@ -83,14 +85,14 @@ always @(posedge clk_in) begin
     end
 
     // may cause problem !!!!!!!
-    if (submit_valid_rs) begin // update reg_file according to inst submitted
-      for (i = 1; i < 32; i = i + 1) begin
-        if (depend_file[i] == submit_tag_rs) begin
-          reg_file[i] <= submit_val_rs;
-          depend_file[i] <= `None;
-        end
-      end
-    end
+    // if (submit_valid_rs) begin // update reg_file according to inst submitted
+    //   for (i = 1; i < 32; i = i + 1) begin
+    //     if (depend_file[i] == submit_tag_rs) begin
+    //       reg_file[i] <= submit_val_rs;
+    //       depend_file[i] <= `None;
+    //     end
+    //   end
+    // end
 
     if (cdb_active) begin // update depend & val of rd according to inst submitted
       for (i = 1; i < 32; i = i + 1) begin

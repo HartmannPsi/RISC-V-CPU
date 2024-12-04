@@ -9,6 +9,7 @@ module BranchPredictor(
   input wire branch,
   input wire [31:0] imm,
   input wire inst_length,
+  input wire foq_full,
 
   // now pc
   input wire [31:0] pc_in,
@@ -61,7 +62,7 @@ wire [31:0] nxt_offset = inst_length ? 4 : 2;
 //   end
 // endfunction
 
-wire need_predict = branch && rdy_in;
+wire need_predict = branch && rdy_in && !foq_full;
 // assign need_branch = need_predict ? bp_fsm[distribute(pc_in, bp_fsm)][1:0] > 2'b01 : 1'b0;
 assign need_branch = need_predict ? bp_fsm[pc_in[`BP_SIZE_W:1]] > 2'b01 : 1'b0;
 assign branch_addr = need_predict ? (need_branch ? pc_in + imm : pc_in + nxt_offset) : 32'b0;
