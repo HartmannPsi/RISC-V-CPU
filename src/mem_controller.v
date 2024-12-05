@@ -47,6 +47,18 @@ reg block;
 reg [2:0] type_;
 reg [1:0] state;
 
+wire [7:0] out_flow = (mem_addr == 32'h30000) ? mem_write : 8'b0;
+
+task GetOutput;
+input [7:0] out_flow;
+
+begin
+  if (out_flow != 8'b0) begin
+    $display("Output: %0h", out_flow);
+  end
+end
+endtask
+
 task Monitor;
 input [1:0] task_src_in;
 input [31:0] addr_in;
@@ -103,7 +115,7 @@ assign icache_block = block || activate_in_lsb;
 
 assign r_nw_out = (called && state == 2'b0) ? r_nw_in : r_nw;
 
-assign mem_addr = (called && state == 2'b0) ? addr_in : addr;
+assign mem_addr = (called && state == 2'b0) ? addr_in : (data_available ? 32'b0 : addr);
 
 function [7:0] memWrite;
   input [1:0] state_arg;
@@ -213,6 +225,8 @@ always @(posedge clk_in) begin
   end
   else begin
 
+    // GetOutput(out_flow);
+
     if (data_available) begin
 
       // if (addr == 32'h30004 && type_[1:0] == 2'b10 && !r_nw_buf) begin // sb 0x30004 (halt)
@@ -220,6 +234,9 @@ always @(posedge clk_in) begin
       // end
 
       data_available <= 1'b0;
+      data <= 32'b0;
+      addr <= 32'b0;
+      r_nw <= 1'b1;
       block <= 1'b0;
       type_ <= 3'b0;
       task_src <= 2'b00;
