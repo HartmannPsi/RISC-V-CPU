@@ -145,6 +145,11 @@ wire [31:0] d_cpu_cycle_cnt;
 assign d_cpu_cycle_cnt = active ? q_cpu_cycle_cnt : q_cpu_cycle_cnt + 1'b1;
 reg d_program_finish;
 
+// SIM OUTPUT
+reg  [7:0] sim_out;
+reg        sim_out_en;
+
+
 // Update FF state.
 always @(posedge clk)
   begin
@@ -181,6 +186,23 @@ always @(posedge clk)
         program_finish     <= d_program_finish;
       end
   end
+
+
+always @(posedge clk) begin
+  if (!rst) begin
+    // output
+    if (sim_out_en) begin
+      $write("%c", sim_out);
+    end
+    // shutdown
+    if (d_program_finish) begin
+      `ifndef ONLINE_JUDGE
+      $display("IO:Return");
+      `endif
+      $finish(0);
+    end
+  end
+end
 
 // Instantiate the serial controller block.
 uart #(.SYS_CLK_FREQ(SYS_CLK_FREQ),
@@ -230,6 +252,9 @@ always @*
     d_tx_data     = 8'h00;
     d_wr_en       = 1'b0;
 
+    sim_out    = 8'h00;
+    sim_out_en = 1'b0;
+
     // Setup default output regs.
     ram_wr    = 1'b0;
     io_in_rd_en = 1'b0;
@@ -249,7 +274,8 @@ always @*
               d_tx_data = io_din;
               d_wr_en   = 1'b1;
             end
-            $write("%c", io_din);
+            sim_out = io_din;
+            sim_out_en = 1'b1;
           end
           3'h4: begin      // 0x30004 write: indicates program stop
             if (!tx_full) begin
@@ -258,8 +284,6 @@ always @*
             end
             d_state = S_DECODE; 
             d_program_finish = 1'b1;
-            $display("IO:Return");
-            $finish;
           end
         endcase
       end else begin
