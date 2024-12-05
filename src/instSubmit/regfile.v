@@ -106,7 +106,7 @@ always @(posedge clk_in) begin
       if (cdb_rd_idx != 5'b0) begin
         reg_file[cdb_rd_idx] <= cdb_val;
         
-        if (cdb_tag == depend_file[cdb_rd_idx]) begin
+        if (cdb_tag == depend_file[cdb_rd_idx] && !(inst_valid && push_valid && rd == cdb_rd_idx)) begin
           depend_file[cdb_rd_idx] <= `None;
         end
       end
