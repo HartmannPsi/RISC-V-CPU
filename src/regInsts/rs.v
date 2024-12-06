@@ -16,6 +16,7 @@ module ReservationStation(
   input wire [4:0] rs2,
   input wire [31:0] imm,
   input wire jalr,
+  input wire inst_length,
   input wire [31:0] addr,
   input wire inst_valid,
 
@@ -51,12 +52,12 @@ module ReservationStation(
   input wire [3:0] qk
 );
 
-reg [113:0] rs_buffer[2:0]; // {submit_tag, addr, vj, vk, qj, qk, op, busy}
+reg [114:0] rs_buffer[2:0]; // {inst_length, submit_tag, addr, vj, vk, qj, qk, op, busy}
 reg [2:0] i;
 
 function [2:0] getFreeBuf;
   // input [109:0] rs_buffer[2:0];
-  input [113:0] rs_buffer0, rs_buffer1, rs_buffer2;
+  input [114:0] rs_buffer0, rs_buffer1, rs_buffer2;
 
   begin
     // integer i;
@@ -84,7 +85,7 @@ endfunction
 
 function [2:0] getReadyBuf;
   // input [109:0] rs_buffer[2:0];
-  input [113:0] rs_buffer0, rs_buffer1, rs_buffer2;
+  input [114:0] rs_buffer0, rs_buffer1, rs_buffer2;
 
   begin
     // integer i;
@@ -169,12 +170,14 @@ wire [31:0] compute_addr = submit_valid ? rs_buffer[ready_idx[1:0]][109:78] : 32
 wire [31:0] op1 = submit_valid ? rs_buffer[ready_idx[1:0]][77:46] : 32'b0;
 wire [31:0] op2 = submit_valid ? rs_buffer[ready_idx[1:0]][45:14] : 32'b0;
 wire [4:0] alu_op = submit_valid ? rs_buffer[ready_idx[1:0]][5:1] : 5'b0;
+wire inst_length_calc = submit_valid ? rs_buffer[ready_idx[1:0]][114] : 1'b0;
 
 ALU alu(
   .op1(op1),
   .op2(op2),
   .addr(compute_addr),
   .alu_op(alu_op),
+  .inst_length(inst_length_calc),
   .result(submit_val),
   .zero(),
   .c_out(),
@@ -407,7 +410,7 @@ endtask
 always @(posedge clk_in) begin
   if (rst_in) begin
     for (i = 0; i < 3; i = i + 1) begin
-      rs_buffer[i[1:0]] <= 114'b0;
+      rs_buffer[i[1:0]] <= 115'b0;
     end
     //i <= 0;
   end
@@ -444,13 +447,13 @@ always @(posedge clk_in) begin
     end
 
     if (free_idx != 3'b111) begin // push
-      rs_buffer[free_idx[1:0]] <= {choose_tag, addr, push_vj, push_vk, push_qj, push_qk, op, 1'b1};
+      rs_buffer[free_idx[1:0]] <= {inst_length, choose_tag, addr, push_vj, push_vk, push_qj, push_qk, op, 1'b1};
       
       // Monitor(addr, 32'b0, imm, op, rd, rs1, rs2, use_imm, vj, actual_vk, actual_qj, actual_qk);
     end
 
     if (ready_idx != 3'b111) begin // pop
-      rs_buffer[ready_idx[1:0]] <= 114'b0;
+      rs_buffer[ready_idx[1:0]] <= 115'b0;
     end
   end
 end

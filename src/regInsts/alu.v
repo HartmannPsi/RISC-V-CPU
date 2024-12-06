@@ -5,10 +5,11 @@ module ALU(
   // input wire rst_in,			// reset signal
 	// input wire rdy_in,			// ready signal, pause cpu when low
 
-  input wire[31:0] op1,
-  input wire[31:0] op2,
-  input wire[31:0] addr,
-  input wire[4:0] alu_op,
+  input wire [31:0] op1,
+  input wire [31:0] op2,
+  input wire [31:0] addr,
+  input wire [4:0] alu_op,
+  input wire inst_length, // 1 for 32-bit, 0 for 16-bit
 
   output reg [31:0] result,
   output reg zero,         // 1 if result is zero
@@ -192,7 +193,7 @@ always @(*) begin
 
     `JAL:
     begin
-      result = addr + 4;
+      result = addr + (inst_length ? 4 : 2);
       overflow = 0;
       zero = 0;
       c_out = 0;
@@ -200,7 +201,7 @@ always @(*) begin
 
     `JALR:
     begin
-      result = addr + 4;
+      result = addr + (inst_length ? 4 : 2);
       overflow = 0;
       zero = 0;
       c_out = 0;

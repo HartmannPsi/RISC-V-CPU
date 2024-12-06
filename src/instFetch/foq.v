@@ -18,6 +18,7 @@ module FpOpQueue(
   input wire ls_in,
   input wire use_imm_in,
   input wire jalr_in,
+  input wire inst_length_in,
 
   // addr of inst fetched
   input wire [31:0] addr_in,
@@ -32,6 +33,7 @@ module FpOpQueue(
   output wire ls_out,
   output wire use_imm_out,
   output wire jalr_out,
+  output wire inst_length_out,
 
   // addr of inst launched
   output wire [31:0] addr_out,
@@ -49,25 +51,25 @@ module FpOpQueue(
   input wire predict_fail
 );
 
-reg [87:0] op_queue[`FOQ_SIZE - 1:0];
+reg [88:0] op_queue[`FOQ_SIZE - 1:0];
 reg [`FOQ_SIZE_W - 1:0] front, rear;
 integer i;
 
 assign inst_out_valid = !(front == rear); // nonempty
 assign foq_full = (front == rear + 1) || (front == 0 && rear == `FOQ_SIZE - 1); // full
 
-assign {op_out, rd_out, rs1_out, rs2_out, imm_out,
+assign {inst_length_out, op_out, rd_out, rs1_out, rs2_out, imm_out,
           branch_out, ls_out, use_imm_out,
-          jalr_out, addr_out} = inst_out_valid ? op_queue[front] : 88'b0; // output if nonempty
+          jalr_out, addr_out} = inst_out_valid ? op_queue[front] : 89'b0; // output if nonempty
 
-wire [87:0] inst_total_in = {op_in, rd_in, rs1_in,
+wire [88:0] inst_total_in = {inst_length_in, op_in, rd_in, rs1_in,
           rs2_in, imm_in, branch_in, ls_in,
           use_imm_in, jalr_in, addr_in};
 
 always @(posedge clk_in) begin
   if (rst_in || predict_fail) begin
     for (i = 0; i < `FOQ_SIZE; i = i + 1) begin
-      op_queue[i] <= 88'b0;
+      op_queue[i] <= 89'b0;
     end
     front <= 0;
     rear <= 0;
@@ -79,7 +81,7 @@ always @(posedge clk_in) begin
   else begin
 
     if (inst_out_valid && !launch_fail) begin // pop
-      op_queue[front] <= 88'b0;
+      op_queue[front] <= 89'b0;
       if (front == `FOQ_SIZE - 1) begin
         front <= 0;
       end

@@ -47,8 +47,8 @@ assign qk = inst_valid ? depend_file[rs2] : `None;
 assign vj = (inst_valid && qj == `None) ? reg_file[rs1] : 32'b0;
 assign vk = (inst_valid && qk == `None) ? reg_file[rs2] : 32'b0;
 
-wire [31:0] reg_val = reg_file[15];
-wire [3:0] reg_depend = depend_file[15];
+wire [31:0] a5 = reg_file[15], ra = reg_file[1], sp = reg_file[2];
+wire [3:0] a5_dep = depend_file[15], ra_dep = depend_file[1], sp_dep = depend_file[2];
 
 task Monitor;
 input [31:0] val;

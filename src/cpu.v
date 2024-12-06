@@ -195,6 +195,7 @@ wire [31:0] addr_foq;
 wire inst_valid_foq;
 wire launch_fail_lsb;
 wire launch_fail_rs;
+wire inst_length_foq;
 
 FpOpQueue foq(
   .clk_in(clk_in),
@@ -212,6 +213,7 @@ FpOpQueue foq(
   .ls_in(ls_op_push),
   .use_imm_in(use_imm_op_push),
   .jalr_in(jalr_op_push),
+  .inst_length_in(inst_length_icache),
 
   .addr_in(addr_icache_prcs),
 
@@ -224,6 +226,7 @@ FpOpQueue foq(
   .ls_out(ls_foq),
   .use_imm_out(use_imm_foq),
   .jalr_out(jalr_foq),
+  .inst_length_out(inst_length_foq),
 
   .addr_out(addr_foq),
 
@@ -285,6 +288,7 @@ ReservationStation rs(
   .rs2(rs2_foq),
   .imm(imm_foq),
   .jalr(jalr_foq),
+  .inst_length(inst_length_foq),
   .addr(addr_foq),
   .inst_valid(inst_valid_foq),
 
