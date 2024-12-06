@@ -117,14 +117,24 @@ always @(posedge clk_in) begin
           end
         end
 
-        // pop queue
-        bp_queue[front] <= 65'b0;
-        if (front == `BP_SIZE - 1) begin
+
+        if (predict_fail) begin // clear bp_queue
+          for (i = 0; i < `BP_SIZE; i = i + 1) begin
+            bp_queue[i] <= 65'b0;
+          end
           front <= 0;
+          rear <= 0;
         end
-        else begin
-          front <= front + 1;
+        else begin // pop
+          bp_queue[front] <= 65'b0;
+          if (front == `BP_SIZE - 1) begin
+            front <= 0;
+          end
+          else begin
+            front <= front + 1;
+          end
         end
+        
       end
     end
 end
