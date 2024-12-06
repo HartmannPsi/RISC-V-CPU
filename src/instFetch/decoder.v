@@ -19,6 +19,8 @@ wire [6:0] opcode = inst[6:0];
 wire [2:0] funct3 = inst[14:12];
 wire [6:0] funct7 = inst[31:25];
 
+// TODO: check rv32i standard
+
 always @(*) begin
 
   if (inst == 0) begin // invalid
@@ -214,7 +216,7 @@ always @(*) begin
       jalr = 0;
     end
 
-    else if (inst[15:13] == 3'b010 && inst[1:0] == 2'b01) begin // c.li
+    else if (inst[15:13] == 3'b010 && inst[1:0] == 2'b01 && inst[11:7] != 0) begin // c.li
       op = `ADD;
       branch = 0;
       ls = 0;
@@ -238,7 +240,7 @@ always @(*) begin
       jalr = 0;
     end
 
-    else if (inst[15:13] == 3'b011 && inst[1:0] == 2'b01 && {inst[12], inst[6:2]} != 0) begin // c.lui
+    else if (inst[15:13] == 3'b011 && inst[1:0] == 2'b01 && {inst[12], inst[6:2]} != 0 && inst[11:7] != 0 && inst[11:7] != 2) begin // c.lui
       op = `LUI;
       branch = 0;
       ls = 0;
@@ -250,7 +252,7 @@ always @(*) begin
       jalr = 0;
     end
 
-    else if (inst[15:13] == 3'b100 && inst[11:10] == 2'b00 && inst[1:0] == 2'b01 && inst[12] == 0) begin // c.srli
+    else if (inst[15:13] == 3'b100 && inst[11:10] == 2'b00 && inst[1:0] == 2'b01 && inst[12] == 0 && inst[6:2] != 0) begin // c.srli
       op = `SRL;
       branch = 0;
       ls = 0;
@@ -262,7 +264,7 @@ always @(*) begin
       jalr = 0;
     end
 
-    else if (inst[15:13] == 3'b100 && inst[11:10] == 2'b01 && inst[1:0] == 2'b01 && inst[12] == 0) begin // c.srai
+    else if (inst[15:13] == 3'b100 && inst[11:10] == 2'b01 && inst[1:0] == 2'b01 && inst[12] == 0 && inst[6:2] != 0) begin // c.srai
       op = `SRA;
       branch = 0;
       ls = 0;
@@ -406,7 +408,7 @@ always @(*) begin
       jalr = 0;
     end
 
-    else if (inst[15:13] == 3'b010 && inst[1:0] == 2'b10 && inst[12] == 0) begin // c.slli
+    else if (inst[15:13] == 3'b000 && inst[1:0] == 2'b10 && inst[12] == 0 && inst[11:7] != 0 && inst[6:2] != 0) begin // c.slli
       op = `SLL;
       branch = 0;
       ls = 0;
@@ -418,7 +420,7 @@ always @(*) begin
       jalr = 0;
     end
 
-    else if (inst[15:12] == 4'b1000 && inst[6:0] == 7'b000_0010) begin // c.jr
+    else if (inst[15:12] == 4'b1000 && inst[6:0] == 7'b000_0010 && inst[11:7] != 0) begin // c.jr
       op = `JALR;
       branch = 0;
       ls = 0;
@@ -430,7 +432,7 @@ always @(*) begin
       jalr = 1;
     end
 
-    else if (inst[15:12] == 4'b1000 && inst[1:0] == 2'b10) begin // c.mv
+    else if (inst[15:12] == 4'b1000 && inst[1:0] == 2'b10 && inst[11:7] != 0 && inst[6:2] != 0) begin // c.mv
       op = `ADD;
       branch = 0;
       ls = 0;
@@ -442,7 +444,7 @@ always @(*) begin
       jalr = 0;
     end
 
-    else if (inst[15:12] == 4'b1001 && inst[6:0] == 7'b000_0010) begin // c.jalr
+    else if (inst[15:12] == 4'b1001 && inst[6:0] == 7'b000_0010 && inst[11:7] != 0) begin // c.jalr
       op = `JALR;
       branch = 0;
       ls = 0;
@@ -454,7 +456,7 @@ always @(*) begin
       jalr = 1;
     end
 
-    else if (inst[15:12] == 4'b1001 && inst[1:0] == 2'b10) begin // c.add
+    else if (inst[15:12] == 4'b1001 && inst[1:0] == 2'b10 && inst[11:7] != 0 && inst[6:2] != 0) begin // c.add
       op = `ADD;
       branch = 0;
       ls = 0;
@@ -466,7 +468,7 @@ always @(*) begin
       jalr = 0;
     end
 
-    else if (inst[15:13] == 3'b010 && inst[1:0] == 2'b10) begin // c.lwsp
+    else if (inst[15:13] == 3'b010 && inst[1:0] == 2'b10 && inst[11:7] != 0) begin // c.lwsp
       op = `LW;
       branch = 0;
       ls = 1;
