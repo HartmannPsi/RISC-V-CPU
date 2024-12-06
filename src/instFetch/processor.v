@@ -288,37 +288,41 @@ always @(posedge clk_in) begin
   else begin
     if (predict_fail) begin // reset from predict fail
       pc <= fail_addr;
-    end
-    else if (inst_available) begin // inst is valid
-      // Monitor(fetch_addr, inst, imm, op, rd, rs1, rs2, use_imm);
-      if (jalr) begin // pause fetching util jalr is done
-        // pause
-        cease <= 1'b1;
-      end
-      else if (cease && !jalr_compute) begin // pause fetching util jalr is done
-        // pause
-      end
-      else if (foq_full) begin // pause fetching util foq is not full
-        // pause
-      end
-      else begin // ordinary fetching
-        if (branch) begin // go to predicted branch addr
-          pc <= branch_addr;
-        end
-        else if (op == `JAL) begin // go to unconditional branch addr
-          pc <= pc + imm;
-        end
-        else begin // normal pc increment
-          pc <= pc + nxt_offset;
-        end
-      end
-    end
-
-    if (jalr_compute) begin // reset cease
       cease <= 1'b0;
-      pc <= jalr_addr;
     end
+    else begin
 
+      if (inst_available) begin // inst is valid
+        // Monitor(fetch_addr, inst, imm, op, rd, rs1, rs2, use_imm);
+        if (jalr) begin // pause fetching util jalr is done
+          // pause
+          cease <= 1'b1;
+        end
+        else if (cease && !jalr_compute) begin // pause fetching util jalr is done
+          // pause
+        end
+        else if (foq_full) begin // pause fetching util foq is not full
+          // pause
+        end
+        else begin // ordinary fetching
+          if (branch) begin // go to predicted branch addr
+            pc <= branch_addr;
+          end
+          else if (op == `JAL) begin // go to unconditional branch addr
+            pc <= pc + imm;
+          end
+          else begin // normal pc increment
+            pc <= pc + nxt_offset;
+          end
+        end
+      end
+
+      if (jalr_compute) begin // reset cease
+        cease <= 1'b0;
+        pc <= jalr_addr;
+      end
+
+    end
   end
 end
 
