@@ -207,6 +207,7 @@ always @(*) begin
       c_out = 0;
       jalr_done = 1'b1;
       jalr_addr = op1 + op2;
+      jalr_addr = {jalr_addr[31:1], 1'b0};
     end
     endcase
 
