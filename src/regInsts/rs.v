@@ -25,6 +25,7 @@ module ReservationStation(
   input wire [31:0] cdb_val,
   input wire [31:0] cdb_addr,
   input wire cdb_active,
+  input wire rob_full,
 
   // whether pending
   output wire launch_fail,
@@ -446,7 +447,7 @@ always @(posedge clk_in) begin
       end
     end
 
-    if (free_idx != 3'b111) begin // push
+    if (free_idx != 3'b111 && !rob_full) begin // push
       rs_buffer[free_idx[1:0]] <= {inst_length, choose_tag, addr, push_vj, push_vk, push_qj, push_qk, op, 1'b1};
       
       // Monitor(addr, 32'b0, imm, op, rd, rs1, rs2, use_imm, vj, actual_vk, actual_qj, actual_qk);

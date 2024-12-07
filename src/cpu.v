@@ -195,6 +195,7 @@ wire [31:0] addr_foq;
 wire inst_valid_foq;
 wire launch_fail_lsb;
 wire launch_fail_rs;
+wire rob_full_rob;
 wire inst_length_foq;
 
 FpOpQueue foq(
@@ -232,7 +233,7 @@ FpOpQueue foq(
 
   .inst_out_valid(inst_valid_foq),
 
-  .launch_fail(launch_fail_rs | launch_fail_lsb), // TODO
+  .launch_fail(launch_fail_rs | launch_fail_lsb | rob_full_rob), // TODO
 
   .foq_full(foq_full_foq),
 
@@ -296,6 +297,7 @@ ReservationStation rs(
   .cdb_val(cdb_val),
   .cdb_addr(cdb_addr),
   .cdb_active(cdb_active),
+  .rob_full(rob_full_rob),
 
   .launch_fail(launch_fail_rs),
   .choose_tag(push_tag_rob),
@@ -347,6 +349,7 @@ LoadStoreBuffer lsb(
   .cdb_val(cdb_val),
   .cdb_addr(cdb_addr),
   .cdb_active(cdb_active),
+  .rob_full(rob_full_rob),
 
   .launch_fail(launch_fail_lsb),
   .choose_tag(push_tag_rob),
@@ -384,7 +387,7 @@ RegFile reg_file(
   .rs2(rs2_idx_rs | rs2_idx_lsb),
   .rd_tag(push_tag_rob),
   .inst_valid(inst_valid_rs | inst_valid_lsb),
-  .push_valid(!(launch_fail_rs | launch_fail_lsb)),
+  .push_valid(!(launch_fail_rs | launch_fail_lsb | rob_full_rob)),
 
   .cdb_tag(cdb_tag),
   .cdb_val(cdb_val),
@@ -421,6 +424,8 @@ ReorderBuffer rob(
   .submit_valid_lsb(submit_valid_lsb),
 
   .predict_fail(predict_fail_bp),
+  
+  .rob_full(rob_full_rob),
 
   .push_rob_tag(push_tag_rob),
 

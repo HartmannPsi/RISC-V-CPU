@@ -23,6 +23,7 @@ module LoadStoreBuffer(
   input wire [31:0] cdb_val,
   input wire [31:0] cdb_addr,
   input wire cdb_active,
+  input wire rob_full,
 
   // whether pending
   output wire launch_fail,
@@ -279,7 +280,7 @@ always @(posedge clk_in) begin
       end
     end
 
-    if (free_idx != 4'b1111) begin // push
+    if (free_idx != 4'b1111 && !rob_full) begin // push
       ls_buffer[free_idx] <= {choose_tag, input_ld_inst, imm, addr, push_vj, push_vk, push_qj, push_qk, op, 1'b1};
       if (rear == 9) begin
         rear <= 4'b0;

@@ -24,6 +24,9 @@ module ReorderBuffer(
   // clear signal from bp
   input wire predict_fail,
 
+  // whether rob is full
+  output wire rob_full,
+
   // the tag in rob of the inst pushed
   output wire [3:0] push_rob_tag,
 
@@ -35,6 +38,8 @@ module ReorderBuffer(
   output wire cdb_active
 );
 
+// TODO: pause when rob full
+
 reg [73:0] rob_queue[`ROB_SIZE - 1:0]; // {rd, tag, val, addr, solved}
 reg [`ROB_SIZE_W - 1:0] front, rear;
 integer i;
@@ -45,6 +50,7 @@ assign cdb_addr = rob_queue[front][32:1];
 assign cdb_val = rob_queue[front][64:33];
 assign cdb_tag = rob_queue[front][68:65];
 assign push_rob_tag = push_valid ? (rear + 1) : 0; // tag starts from 1, 0 means None
+assign rob_full = (front == rear + 1) || (rear == `ROB_SIZE - 1 && front == 0);
 
 integer idx_rs;
 integer idx_lsb;
@@ -87,7 +93,7 @@ always @(posedge clk_in) begin
     end
 
     else begin
-      if (push_valid) begin // push
+      if (push_valid && !rob_full) begin // push
         rob_queue[rear] <= push_data;
         if (rear == `ROB_SIZE - 1) begin
           rear <= 0;
