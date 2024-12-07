@@ -229,6 +229,20 @@ assign type_out = getType(ls_buffer[ready_idx][5:1]);
 assign st_val = ls_buffer[ready_idx][45:14]; // vk
 assign ls_addr = ls_buffer[ready_idx][141:110] + ls_buffer[ready_idx][77:46]; // imm + vj
 
+task Monitor;
+  input [146:0] buffer;
+  input [3:0] idx;
+
+begin
+  if (idx != 4'b1111 && buffer[109:78] == 32'h194) begin // addr == 0x194
+    $display("vk = %0h, imm = %0h, vj = %0h, qj = %0h, qk = %0h", buffer[45:14], buffer[141:110], buffer[77:46], buffer[13:10], buffer[9:6]);
+  end
+  else if (idx != 4'b1111 && buffer[141:110] + buffer[77:46] == 32'h1c8) begin // imm + vj == 0x1c8
+    $display("vk = %0h, qj = %0h, qk = %0h, addr = %0h", buffer[45:14], buffer[13:10], buffer[9:6], buffer[109:78]);
+  end
+end
+endtask
+
 always @(posedge clk_in) begin
   if (rst_in) begin
     for (i = 0; i < 10; i = i + 1) begin
@@ -244,6 +258,8 @@ always @(posedge clk_in) begin
     // pause
   end
   else begin
+
+    // Monitor(ls_buffer[ready_idx], ready_idx);
 
     if (cdb_active) begin // update
       for (i = 0; i < 10; i = i + 1) begin

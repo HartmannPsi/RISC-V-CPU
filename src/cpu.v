@@ -76,7 +76,7 @@ assign mem_wr = ~not_mem_wr;
 
 MemController mem_ctrl(
   .clk_in(clk_in),
-  .rst_in(rst_in),
+  .rst_in(rst_in | predict_fail_bp),
   .rdy_in(rdy_in),
 
   .mem_read(mem_din),
