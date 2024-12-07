@@ -24,7 +24,6 @@ all: testcases build_sim
 endif
 
 testcases:
- 	cd $(TESTCASE_DIR) && docker run -it --rm -v .:/app -w /app riscv-toolchain  make
 	# @make -C $(TESTCASE_DIR)
 	
 
