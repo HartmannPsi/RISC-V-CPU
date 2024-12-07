@@ -304,6 +304,9 @@ always @(posedge clk_in) begin
         else if (foq_full) begin // pause fetching util foq is not full
           // pause
         end
+        else if (jalr_compute) begin // process as follows
+          // as follows
+        end
         else begin // ordinary fetching
           if (branch) begin // go to predicted branch addr
             pc <= branch_addr;

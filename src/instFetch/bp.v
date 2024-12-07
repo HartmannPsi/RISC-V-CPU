@@ -72,7 +72,7 @@ wire [31:0] head_src_addr = bp_queue[front][64:33], head_fail_addr = bp_queue[fr
 wire head_br = bp_queue[front][0];
 wire calc_res = cdb_val[0];
 
-assign predict_fail = cdb_active && head_src_addr == cdb_addr && head_br != calc_res;
+assign predict_fail = cdb_active && head_src_addr == cdb_addr && cdb_addr != 32'b0 && head_br != calc_res;
 assign fail_addr = predict_fail ? head_fail_addr : 32'b0;
 
 // wire [`BP_SIZE_W - 1:0] idx_of_head = distribute(head_src_addr, bp_fsm);
@@ -93,7 +93,7 @@ always @(posedge clk_in) begin
       // pause
     end
     else begin
-      if (need_predict) begin // push
+      if (need_predict && !predict_fail) begin // push
         bp_queue[rear] <= {pc_in, fail_addr_in, need_branch};
         if (rear == `BP_SIZE - 1) begin
           rear <= 0;
