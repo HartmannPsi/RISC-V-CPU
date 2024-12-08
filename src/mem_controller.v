@@ -117,7 +117,7 @@ assign icache_block = block || activate_in_lsb;
 
 assign r_nw_out = (called && state == 2'b0) ? r_nw_in : r_nw;
 
-assign mem_addr = (called && state == 2'b0) ? addr_in : (data_available ? 32'b0 : addr);
+assign mem_addr = (called && state == 2'b0) ? addr_in : addr;
 
 wire type_in_sb = called && type_in[1:0] == 2'b10 && !r_nw_in && state == 2'b00;
 
@@ -278,7 +278,7 @@ always @(posedge clk_in) begin
             state <= 2'b00;
             data_available <= 1'b1;
             type_ <= type_in;
-            addr <= addr_in;
+            // addr <= addr_in;
             // r_nw <= r_nw_in;
           end
           else begin // word or half-word operation
@@ -288,6 +288,10 @@ always @(posedge clk_in) begin
             type_ <= type_in;
             if (!r_nw_in) begin // write
               data <= data_in;
+            end
+
+            if (!r_nw_in && type_in[1:0] == 2'b01) begin // SH
+              data_available <= 1'b1;
             end
           end
           // r_nw_buf <= r_nw_in;
@@ -318,6 +322,9 @@ always @(posedge clk_in) begin
       begin
         if (r_nw) begin
           data[15:8] <= mem_read;
+        end
+        else begin // SW
+          data_available <= 1'b1;
         end
         state <= 2'b11;
         addr <= addr + 1;
