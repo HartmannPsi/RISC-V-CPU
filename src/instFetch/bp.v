@@ -41,6 +41,7 @@ reg [`BP_SIZE_W - 1:0] front, rear;
 integer i;
 
 wire [31:0] nxt_offset = inst_length ? 4 : 2;
+wire bp_queue_full = (front == rear + 1) || (front == 0 && rear == `BP_SIZE - 1);
 
 // function [`BP_SIZE_W - 1:0] distribute; // get the idx of fsm
 //   input [31:0] src_addr;
@@ -94,6 +95,12 @@ always @(posedge clk_in) begin
     end
     else begin
       if (need_predict && !predict_fail) begin // push
+
+        if (bp_queue_full) begin
+          $display("Error: bp_queue_full");
+          $finish;
+        end
+
         bp_queue[rear] <= {pc_in, fail_addr_in, need_branch};
         if (rear == `BP_SIZE - 1) begin
           rear <= 0;
