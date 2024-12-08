@@ -102,7 +102,7 @@ always @(posedge clk_in) begin
 
         if (bp_queue_full) begin
           $display("Error: bp_queue_full");
-          $finish;
+          $fatal(1, "Error: bp_queue_full");
         end
 
         bp_queue[rear] <= {pc_in, fail_addr_in, need_branch};
