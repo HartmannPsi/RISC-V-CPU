@@ -62,7 +62,7 @@ module LoadStoreBuffer(
 
 reg [146:0] ls_buffer[9:0]; // {submit_tag, ls_ready, imm, addr, vj, vk, qj, qk, op, busy}
 reg [3:0] i, front, rear;
-reg [3:0] ongoing_idx;
+// reg [3:0] ongoing_idx;
 // reg pending;
 
 wire empty = front == rear;
@@ -220,11 +220,11 @@ wire ready_ld_inst = ready_idx == 4'b1111 ? 1'b0 : (ls_buffer[ready_idx][5:1] ==
 // wire ready_st_inst = ready_idx == 4'b1111 ? 1'b0 : (ls_buffer[ready_idx][5:1] == `SB || ls_buffer[ready_idx][5:1] == `SH ||
 //                                                       ls_buffer[ready_idx][5:1] == `SW);
 
-assign submit_valid = ongoing_idx != 4'b1111 && ls_done_in;
-assign submit_tag = submit_valid ? ls_buffer[ongoing_idx][146:143] : `None;
+assign submit_valid = ready_idx != 4'b1111 && ls_done_in;
+assign submit_tag = submit_valid ? ls_buffer[ready_idx][146:143] : `None;
 assign submit_val = submit_valid ? ld_val : 32'b0;
 
-assign activate_cache = ready_idx != 4'b1111 && ls_buffer[ready_idx][142] && (ls_buffer[ready_idx][13:10] == `None) && (ls_buffer[ready_idx][9:6] == `None); // ls_ready
+assign activate_cache = ready_idx != 4'b1111 && (ls_buffer[ready_idx][142] || (!cdb_active && ls_buffer[ready_idx][146:143] == cdb_tag)) && (ls_buffer[ready_idx][13:10] == `None) && (ls_buffer[ready_idx][9:6] == `None); // ls_ready
 assign r_nw_out = ready_ld_inst;
 assign type_out = getType(ls_buffer[ready_idx][5:1]);
 assign st_val = ls_buffer[ready_idx][45:14]; // vk
@@ -249,7 +249,7 @@ always @(posedge clk_in) begin
     for (i = 0; i < 10; i = i + 1) begin
       ls_buffer[i] <= 147'b0;
     end
-    ongoing_idx <= 4'b1111;
+    // ongoing_idx <= 4'b1111;
     i <= 4'b0;
     front <= 4'b0;
     rear <= 4'b0;
@@ -290,22 +290,22 @@ always @(posedge clk_in) begin
       end
     end
 
-    if (activate_cache) begin // store the idx to ongoing_idx
-      ongoing_idx <= ready_idx;
+    // if (activate_cache) begin // store the idx to ongoing_idx
+    //   ongoing_idx <= ready_idx;
 
-      // if (mem_working) begin // wait for next submission
-      //   pending <= 1'b1;
-      // end
-    end
+    //   // if (mem_working) begin // wait for next submission
+    //   //   pending <= 1'b1;
+    //   // end
+    // end
 
-    if (submit_valid && ongoing_idx != 4'b1111) begin // pop
+    if (submit_valid) begin // pop
 
       // if (pending) begin // wait for next submission
       //   pending <= 1'b0;
       // end
       // else begin
-      ls_buffer[ongoing_idx] <= 147'b0;
-      ongoing_idx <= 4'b1111;
+      ls_buffer[ready_idx] <= 147'b0;
+      // ongoing_idx <= 4'b1111;
       if (front == 9) begin
         front <= 4'b0;
       end

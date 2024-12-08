@@ -102,8 +102,8 @@ MemController mem_ctrl(
   .activate_in_lsb(activate_mem_lsb),
 
   .data_out(data_out_ctrl),
-  .data_available(available_ctrl),
-  .task_src(task_src_ctrl),
+  .data_available_out(available_ctrl),
+  .task_src_out(task_src_ctrl),
   .icache_block(icache_block),
 
   .io_buffer_full(io_buffer_full)

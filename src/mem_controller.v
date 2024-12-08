@@ -23,8 +23,8 @@ module MemController(
   input wire activate_in_lsb,
 
   output wire [31:0] data_out,
-  output reg data_available, // 1 for data_out is valid
-  output reg [1:0] task_src, // 00: none, 01: lsb, 10: icache
+  output wire data_available_out, // 1 for data_out is valid
+  output wire [1:0] task_src_out, // 00: none, 01: lsb, 10: icache
   output wire icache_block, // 1 for icache pending
   //output wire working, // 1 for working
 
@@ -46,6 +46,8 @@ reg r_nw;
 reg block;
 reg [2:0] type_;
 reg [1:0] state;
+reg data_available;
+reg [1:0] task_src;
 
 wire [7:0] out_flow = (mem_addr == 32'h30000) ? mem_write : 8'b0;
 
@@ -116,6 +118,12 @@ assign icache_block = block || activate_in_lsb;
 assign r_nw_out = (called && state == 2'b0) ? r_nw_in : r_nw;
 
 assign mem_addr = (called && state == 2'b0) ? addr_in : (data_available ? 32'b0 : addr);
+
+wire type_in_sb = called && type_in[1:0] == 2'b10 && !r_nw_in && state == 2'b00;
+
+assign data_available_out = type_in_sb ? 1'b1 : data_available;
+
+assign task_src_out = type_in_sb ? task_src_in : task_src;
 
 function [7:0] memWrite;
   input [1:0] state_arg;
@@ -240,12 +248,25 @@ always @(posedge clk_in) begin
       block <= 1'b0;
       type_ <= 3'b0;
       task_src <= 2'b00;
+      state <= 2'b00;
     end
     else begin
       case (state)
       2'b00: // free state
       begin
-        if (called) begin
+        if (type_in_sb) begin
+          // handle special case of SB operation: available immediately
+          // raising LS speed
+          data_available <= 1'b0;
+          data <= 32'b0;
+          addr <= 32'b0;
+          r_nw <= 1'b1;
+          block <= 1'b0;
+          type_ <= 3'b0;
+          task_src <= 2'b00;
+          state <= 2'b00;
+        end
+        else if (called) begin
 
           // Monitor(task_src_in, addr_in, data_in, type_in, r_nw_in);
 
