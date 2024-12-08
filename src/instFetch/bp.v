@@ -40,6 +40,8 @@ reg [1:0] bp_fsm[0:`BP_SIZE - 1];
 reg [`BP_SIZE_W - 1:0] front, rear;
 integer i;
 
+integer total_num, correct_num;
+
 wire [31:0] nxt_offset = inst_length ? 4 : 2;
 wire bp_queue_full = (front == rear + 1) || (front == 0 && rear == `BP_SIZE - 1);
 
@@ -89,6 +91,8 @@ always @(posedge clk_in) begin
         bp_fsm[i] <= 2'b01; // WNT
       end
       //i <= 0;
+      total_num <= 0;
+      correct_num <= 0;
     end
     else if (!rdy_in) begin
       // pause
@@ -131,6 +135,7 @@ always @(posedge clk_in) begin
           end
           front <= 0;
           rear <= 0;
+          total_num <= total_num + 1;
         end
         else begin // pop
           bp_queue[front] <= 65'b0;
@@ -140,6 +145,8 @@ always @(posedge clk_in) begin
           else begin
             front <= front + 1;
           end
+          total_num <= total_num + 1;
+          correct_num <= correct_num + 1;
         end
         
       end
