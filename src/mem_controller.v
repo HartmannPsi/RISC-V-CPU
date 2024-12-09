@@ -111,7 +111,8 @@ endtask
 
 // assign working = state != 2'b0;
 
-wire called = rdy_in && activate_in && !io_buffer_full && !data_available;
+wire called = rdy_in && activate_in && !data_available;
+// wire called = rdy_in && activate_in && !io_buffer_full && !data_available;
 
 assign icache_block = block || activate_in_lsb;
 
