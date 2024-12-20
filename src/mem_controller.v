@@ -48,8 +48,10 @@ reg [2:0] type_;
 reg [1:0] state;
 reg data_available;
 reg [1:0] task_src;
+reg read_input;
 
 wire [7:0] out_flow = (mem_addr == 32'h30000) ? mem_write : 8'b0;
+wire [7:0] in_flow = read_input ? mem_read : 8'b0;
 
 task GetOutput;
 input [7:0] out_flow;
@@ -228,6 +230,7 @@ always @(posedge clk_in) begin
     state <= 2'b0;
     block <= 1'b0;
     task_src <= 2'b00;
+    read_input <= 1'b0;
   end
   else if (!rdy_in) begin
     // pause
@@ -250,6 +253,7 @@ always @(posedge clk_in) begin
       type_ <= 3'b0;
       task_src <= 2'b00;
       state <= 2'b00;
+      read_input <= 1'b0;
     end
     else begin
       case (state)
@@ -279,6 +283,10 @@ always @(posedge clk_in) begin
             state <= 2'b00;
             data_available <= 1'b1;
             type_ <= type_in;
+
+            if (addr_in == 32'h30000 && r_nw_in) begin // read from input
+              read_input <= 1'b1;
+            end
             // addr <= addr_in;
             // r_nw <= r_nw_in;
           end
