@@ -220,6 +220,8 @@ wire ready_ld_inst = ready_idx == 4'b1111 ? 1'b0 : (ls_buffer[ready_idx][5:1] ==
 // wire ready_st_inst = ready_idx == 4'b1111 ? 1'b0 : (ls_buffer[ready_idx][5:1] == `SB || ls_buffer[ready_idx][5:1] == `SH ||
 //                                                       ls_buffer[ready_idx][5:1] == `SW);
 
+wire input_ready = input_ld_inst && (imm + push_vj != 32'h30000); // ld inst && not input inst
+
 assign submit_valid = ready_idx != 4'b1111 && ls_done_in;
 assign submit_tag = submit_valid ? ls_buffer[ready_idx][146:143] : `None;
 assign submit_val = submit_valid ? ld_val : 32'b0;
@@ -281,7 +283,7 @@ always @(posedge clk_in) begin
     end
 
     if (free_idx != 4'b1111 && !rob_full) begin // push
-      ls_buffer[free_idx] <= {choose_tag, input_ld_inst, imm, addr, push_vj, push_vk, push_qj, push_qk, op, 1'b1};
+      ls_buffer[free_idx] <= {choose_tag, input_ready, imm, addr, push_vj, push_vk, push_qj, push_qk, op, 1'b1};
       if (rear == 9) begin
         rear <= 4'b0;
       end
