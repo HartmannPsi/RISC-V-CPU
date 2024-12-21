@@ -52,6 +52,7 @@ reg read_input;
 
 wire [7:0] out_flow = (mem_addr == 32'h30000) ? mem_write : 8'b0;
 wire [7:0] in_flow = read_input ? mem_read : 8'b0;
+wire io_activate = mem_addr == 32'h30000;
 
 task GetOutput;
 input [7:0] out_flow;
