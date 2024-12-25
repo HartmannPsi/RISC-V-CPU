@@ -107,23 +107,47 @@ always @(posedge clk_in) begin
 
       if (submit_valid_rs) begin // submit from rs
 
-        // idx_rs = -1;
-        for (i = front; i != rear; i = i + 1) begin : loop_label_1 // traverse
+        // idx_rs = 0;
+        // for (i = front; i != rear; i = i + 1) begin : loop_label_1 // traverse
 
-          if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_rs) begin // unsolved && tag match
+        //   if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_rs) begin // unsolved && tag match
+        //     // idx_rs = i;
+        //     // disable loop_label_1; // break
+        //     rob_queue[i][0] <= 1'b1;
+        //     rob_queue[i][64:33] <= submit_val_rs;
+        //     idx_rs = idx_rs + 1;
+
+        //     if (submit_tag_rs - 1 == i) begin
+        //       $display("YES tag_rs - 1 = i = %0h", i);
+        //     end
+        //     else begin
+        //       $display("NO tag_rs = %0h, i = %0h", submit_tag_rs, i);
+        //     end
+        //   end
+        //   // if (i == `ROB_SIZE - 1) begin
+        //   //   i = 0;
+        //   // end
+        //   // else begin
+        //   //   i = i + 1;
+        //   // end
+        // end
+
+        if (!rob_queue[submit_tag_rs - 1][0] && rob_queue[submit_tag_rs - 1][68:65] == submit_tag_rs) begin // unsolved && tag match
             // idx_rs = i;
             // disable loop_label_1; // break
-            rob_queue[i][0] <= 1'b1;
-            rob_queue[i][64:33] <= submit_val_rs;
-          end
+            rob_queue[submit_tag_rs - 1][0] <= 1'b1;
+            rob_queue[submit_tag_rs - 1][64:33] <= submit_val_rs;
+            // idx_rs = idx_rs + 1;
 
-          // if (i == `ROB_SIZE - 1) begin
-          //   i = 0;
-          // end
-          // else begin
-          //   i = i + 1;
-          // end
+            // if (submit_tag_rs - 1 == i) begin
+            //   $display("YES tag_rs - 1 = i = %0h", i);
+            // end
+            // else begin
+            //   $display("NO tag_rs = %0h, i = %0h", submit_tag_rs, i);
+            // end
         end
+
+        // $display("idx_rs = %0d, submit_tag_rs = %0h", idx_rs, submit_tag_rs);
 
         // if (idx_rs != -1) begin
         //   rob_queue[idx_rs][0] <= 1'b1;
@@ -136,21 +160,42 @@ always @(posedge clk_in) begin
       if (submit_valid_lsb) begin // submit from lsb
 
         // idx_lsb = -1;
-        for (i = front; i != rear; i = i + 1) begin : loop_label_2 // traverse
+        // for (i = front; i != rear; i = i + 1) begin : loop_label_2 // traverse
 
-          if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_lsb) begin // unsolved && tag match
+        //   if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_lsb) begin // unsolved && tag match
+        //     // idx_lsb = i;
+        //     // disable loop_label_2; // break
+        //     rob_queue[i][0] <= 1'b1;
+        //     rob_queue[i][64:33] <= submit_val_lsb;
+
+        //     if (submit_tag_lsb - 1 == i) begin
+        //       $display("YES tag_lsb - 1 = i = %0h", i);
+        //     end
+        //     else begin
+        //       $display("NO tag_lsb = %0h, i = %0h", submit_tag_lsb, i);
+        //     end
+        //   end
+
+        //   // if (i == `ROB_SIZE - 1) begin
+        //   //   i = 0;
+        //   // end
+        //   // else begin
+        //   //   i = i + 1;
+        //   // end
+        // end
+
+        if (!rob_queue[submit_tag_lsb - 1][0] && rob_queue[submit_tag_lsb - 1][68:65] == submit_tag_lsb) begin // unsolved && tag match
             // idx_lsb = i;
             // disable loop_label_2; // break
-            rob_queue[i][0] <= 1'b1;
-            rob_queue[i][64:33] <= submit_val_lsb;
-          end
+            rob_queue[submit_tag_lsb - 1][0] <= 1'b1;
+            rob_queue[submit_tag_lsb - 1][64:33] <= submit_val_lsb;
 
-          // if (i == `ROB_SIZE - 1) begin
-          //   i = 0;
-          // end
-          // else begin
-          //   i = i + 1;
-          // end
+            // if (submit_tag_lsb - 1 == i) begin
+            //   $display("YES tag_lsb - 1 = i = %0h", i);
+            // end
+            // else begin
+            //   $display("NO tag_lsb = %0h, i = %0h", submit_tag_lsb, i);
+            // end
         end
 
         // if (idx_lsb != -1) begin
