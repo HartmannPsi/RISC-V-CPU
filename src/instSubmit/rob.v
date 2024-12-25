@@ -107,12 +107,14 @@ always @(posedge clk_in) begin
 
       if (submit_valid_rs) begin // submit from rs
 
-        idx_rs = -1;
+        // idx_rs = -1;
         for (i = front; i != rear; i = i + 1) begin : loop_label_1 // traverse
 
           if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_rs) begin // unsolved && tag match
-            idx_rs = i;
-            disable loop_label_1; // break
+            // idx_rs = i;
+            // disable loop_label_1; // break
+            rob_queue[i][0] <= 1'b1;
+            rob_queue[i][64:33] <= submit_val_rs;
           end
 
           // if (i == `ROB_SIZE - 1) begin
@@ -123,22 +125,24 @@ always @(posedge clk_in) begin
           // end
         end
 
-        if (idx_rs != -1) begin
-          rob_queue[idx_rs][0] <= 1'b1;
-          rob_queue[idx_rs][64:33] <= submit_val_rs;
-        end
+        // if (idx_rs != -1) begin
+        //   rob_queue[idx_rs][0] <= 1'b1;
+        //   rob_queue[idx_rs][64:33] <= submit_val_rs;
+        // end
         // rob_queue[submit_tag_rs - 1][0] <= 1'b1;
         // rob_queue[submit_tag_rs - 1][64:33] <= submit_val_rs;
       end
 
       if (submit_valid_lsb) begin // submit from lsb
 
-        idx_lsb = -1;
+        // idx_lsb = -1;
         for (i = front; i != rear; i = i + 1) begin : loop_label_2 // traverse
 
           if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_lsb) begin // unsolved && tag match
-            idx_lsb = i;
-            disable loop_label_2; // break
+            // idx_lsb = i;
+            // disable loop_label_2; // break
+            rob_queue[i][0] <= 1'b1;
+            rob_queue[i][64:33] <= submit_val_lsb;
           end
 
           // if (i == `ROB_SIZE - 1) begin
@@ -149,10 +153,10 @@ always @(posedge clk_in) begin
           // end
         end
 
-        if (idx_lsb != -1) begin
-          rob_queue[idx_lsb][0] <= 1'b1;
-          rob_queue[idx_lsb][64:33] <= submit_val_lsb;
-        end
+        // if (idx_lsb != -1) begin
+        //   rob_queue[idx_lsb][0] <= 1'b1;
+        //   rob_queue[idx_lsb][64:33] <= submit_val_lsb;
+        // end
         // rob_queue[submit_tag_lsb - 1][0] <= 1'b1;
         // rob_queue[submit_tag_lsb - 1][64:33] <= submit_val_rs;
       end
