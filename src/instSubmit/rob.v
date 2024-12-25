@@ -40,9 +40,9 @@ module ReorderBuffer(
 
 // TODO: pause when rob full
 
-reg [73:0] rob_queue[`ROB_SIZE - 1:0]; // {rd, tag, val, addr, solved}
+reg [73:0] rob_queue[(1 << `ROB_SIZE_W) - 1:0]; // {rd, tag, val, addr, solved}
 reg [`ROB_SIZE_W - 1:0] front, rear;
-integer i;
+reg [`ROB_SIZE_W - 1:0] i;
 
 assign cdb_rd_idx = rob_queue[front][73:69];
 assign cdb_active = rob_queue[front][0];
@@ -68,9 +68,10 @@ endtask
 
 always @(posedge clk_in) begin
   if (rst_in) begin
-    for (i = 0; i < `ROB_SIZE; i = i + 1) begin
+    for (i = 0; i < (1 << `ROB_SIZE_W) - 1; i = i + 1) begin
       rob_queue[i] <= 74'b0;
     end
+    rob_queue[(1 << `ROB_SIZE_W) - 1] <= 74'b0;
     front <= 0;
     rear <= 0;
     // i <= 0;
@@ -85,9 +86,10 @@ always @(posedge clk_in) begin
     // end
 
     if (predict_fail) begin // clear queue
-      for (i = 0; i < `ROB_SIZE; i = i + 1) begin
+      for (i = 0; i < (1 << `ROB_SIZE_W) - 1; i = i + 1) begin
         rob_queue[i] <= 74'b0;
       end
+      rob_queue[(1 << `ROB_SIZE_W) - 1] <= 74'b0;
       front <= 0;
       rear <= 0;
     end
@@ -105,8 +107,8 @@ always @(posedge clk_in) begin
 
       if (submit_valid_rs) begin // submit from rs
 
-      idx_rs = -1;
-        for (i = {28'b0, front}; i != {28'b0, rear}; i = (i == `ROB_SIZE - 1) ? 0 : i + 1) begin : loop_label_1 // traverse
+        idx_rs = -1;
+        for (i = front; i != rear; i = i + 1) begin : loop_label_1 // traverse
 
           if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_rs) begin // unsolved && tag match
             idx_rs = i;
@@ -125,12 +127,14 @@ always @(posedge clk_in) begin
           rob_queue[idx_rs][0] <= 1'b1;
           rob_queue[idx_rs][64:33] <= submit_val_rs;
         end
+        // rob_queue[submit_tag_rs - 1][0] <= 1'b1;
+        // rob_queue[submit_tag_rs - 1][64:33] <= submit_val_rs;
       end
 
       if (submit_valid_lsb) begin // submit from lsb
 
         idx_lsb = -1;
-        for (i = {28'b0, front}; i != {28'b0, rear}; i = (i == `ROB_SIZE - 1) ? 0 : i + 1) begin : loop_label_2 // traverse
+        for (i = front; i != rear; i = i + 1) begin : loop_label_2 // traverse
 
           if (!rob_queue[i][0] && rob_queue[i][68:65] == submit_tag_lsb) begin // unsolved && tag match
             idx_lsb = i;
@@ -149,6 +153,8 @@ always @(posedge clk_in) begin
           rob_queue[idx_lsb][0] <= 1'b1;
           rob_queue[idx_lsb][64:33] <= submit_val_lsb;
         end
+        // rob_queue[submit_tag_lsb - 1][0] <= 1'b1;
+        // rob_queue[submit_tag_lsb - 1][64:33] <= submit_val_rs;
       end
 
       if (cdb_active) begin // pop
