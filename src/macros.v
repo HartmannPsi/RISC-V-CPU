@@ -54,7 +54,7 @@
 `define LS9  4'b1100
 `define LS10 4'b1101
 
-`define BP_SIZE_W 8
+`define BP_SIZE_W 3
 `define BP_SIZE (1 << `BP_SIZE_W)
 
 `define FOQ_SIZE_W 4
