@@ -94,15 +94,16 @@ always @(*) begin
 
     `SLT: // slt
     begin
-      if (op1[31] == 0 && op2[31] == 1) begin
-        result = 0;
-      end
-      else if (op1[31] == 1 && op2[31] == 0) begin
-        result = 1;
-      end
-      else begin
-        result = {31'b0, (op1 < op2)};
-      end
+      // if (op1[31] == 0 && op2[31] == 1) begin
+      //   result = 0;
+      // end
+      // else if (op1[31] == 1 && op2[31] == 0) begin
+      //   result = 1;
+      // end
+      // else begin
+      //   result = {31'b0, (op1 < op2)};
+      // end
+      result = {31'b0, ($signed(op1) < $signed(op2))};
       overflow = 0;
       zero = ~result[0];
       c_out = result[0];
@@ -127,15 +128,16 @@ always @(*) begin
     
     `BGE: // bge
     begin
-      if (op1[31] == 0 && op2[31] == 1) begin
-        result[0] = 1'b1;
-      end
-      else if (op1[31] == 1 && op2[31] == 0) begin
-        result[0] = 1'b0;
-      end
-      else begin
-        result[0] = (op1 >= op2);
-      end
+      // if (op1[31] == 0 && op2[31] == 1) begin
+      //   result[0] = 1'b1;
+      // end
+      // else if (op1[31] == 1 && op2[31] == 0) begin
+      //   result[0] = 1'b0;
+      // end
+      // else begin
+      //   result[0] = (op1 >= op2);
+      // end
+      result[0] = ($signed(op1) >= $signed(op2));
       result[31:1] = 31'b0;
       overflow = 0;
       zero = ~result[0];
@@ -152,15 +154,16 @@ always @(*) begin
 
     `BLT:
     begin
-      if (op1[31] == 0 && op2[31] == 1) begin
-        result[0] = 1'b0;
-      end
-      else if (op1[31] == 1 && op2[31] == 0) begin
-        result[0] = 1'b1;
-      end
-      else begin
-        result[0] = (op1 < op2);
-      end
+      // if (op1[31] == 0 && op2[31] == 1) begin
+      //   result[0] = 1'b0;
+      // end
+      // else if (op1[31] == 1 && op2[31] == 0) begin
+      //   result[0] = 1'b1;
+      // end
+      // else begin
+      //   result[0] = (op1 < op2);
+      // end
+      result[0] = ($signed(op1) < $signed(op2));
       result[31:1] = 31'b0;
       overflow = 0;
       zero = ~result[0];
