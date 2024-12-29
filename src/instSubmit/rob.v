@@ -41,8 +41,8 @@ module ReorderBuffer(
 // TODO: pause when rob full
 
 reg [73:0] rob_queue[(1 << `ROB_SIZE_W) - 1:0]; // {rd, tag, val, addr, solved}
-reg [`ROB_SIZE_W - 1:0] front, rear;
-reg [`ROB_SIZE_W - 1:0] i;
+reg [3:0] front, rear;
+reg [3:0] i;
 
 assign cdb_rd_idx = rob_queue[front][73:69];
 assign cdb_active = rob_queue[front][0];

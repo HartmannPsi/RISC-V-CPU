@@ -52,7 +52,9 @@ module FpOpQueue(
 );
 
 reg [88:0] op_queue[`FOQ_SIZE - 1:0];
-reg [`FOQ_SIZE_W - 1:0] front, rear;
+// reg [`FOQ_SIZE_W - 1:0] front, rear;
+reg [3:0] front, rear;
+
 integer i;
 
 assign inst_out_valid = !(front == rear); // nonempty
